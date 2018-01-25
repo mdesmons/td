@@ -1,0 +1,17 @@
+body {
+	background-image:url('./background.jpg');
+	background-repeat:no-repeat;
+    background-size:cover;
+    margin-bottom: 60px;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40px; /* Set the fixed height of the footer here */
+  line-height: 40px; /* Vertically center the text there */
+  background-color: #D8E2EB;
+  align: right
+}
