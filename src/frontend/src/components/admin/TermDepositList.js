@@ -6,10 +6,10 @@ const TermDepositItem = ({termDeposit, onClick}) => (
 		<tr  onClick={onClick}>
 		<td>{termDeposit.get('sourceAccount')}</td>
 		<td>{(new Date(termDeposit.get('valueDate') * 1000)).toLocaleString().substr(0, 10)}</td>
-		<td>{termDeposit.get('principal')}</td>
+		<td>{termDeposit.get('principal').amount()}</td>
 		<td>{termDeposit.get('interest')}</td>
 		<td>{termDeposit.get('term')}</td>
-		<td>{(new Date(termDeposit.get('maturityDate') * 1000)).toLocaleString().substr(0, 10)}</td>
+		<td>{(new Date(termDeposit.get('maturityDate'))).toLocaleString().substr(0, 10)}</td>
 		<td>{termDeposit.get('monthlyInterest')}</td>
 		</tr>
 )

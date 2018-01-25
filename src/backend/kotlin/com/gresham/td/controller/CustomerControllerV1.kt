@@ -53,7 +53,7 @@ class CustomerControllerV1() {
 			return hashMapOf("interestRate" to listOf(rateService.getRate(location_code, request.term, request.principal, request.paymentType)))
 		} else {
 			val maturityDate = Date()
-			maturityDate.time = request.maturityDate * 1000
+			maturityDate.time = request.maturityDate
 			return hashMapOf("interestRate" to listOf(rateService.getRate(location_code, Date(), maturityDate, request.principal, request.paymentType)))
 		}
 	}

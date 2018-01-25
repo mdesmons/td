@@ -58,20 +58,22 @@ class TermDepositService {
 		// interest payment from INT TD to CLI
 		val interestPayment = Transfer(type = TransferType.interest,
 				currency = termDeposit.currency,
-				amount = termDeposit.dailyNetClientInterest * termDeposit.term,
+				amount = Math.round(termDeposit.dailyNetClientInterest * termDeposit.term * 100.0)/100.0,
 				date = transferDate,
 				narrative = "Interest from INT TD to CLI",
 				termDeposit = termDeposit)
 		ret.add(interestPayment)
 
-		// WHT payment from INT TD to CLI
-		val whtPayment = Transfer(type = TransferType.wht,
-				currency = termDeposit.currency,
-				amount = termDeposit.dailyWHT * termDeposit.term,
-				date = transferDate,
-				narrative = "WHT payment from INT TD to WHT",
-				termDeposit = termDeposit)
-		ret.add(whtPayment)
+		if (termDeposit.dailyWHT != 0.0) {
+			// WHT payment from INT TD to CLI
+			val whtPayment = Transfer(type = TransferType.wht,
+					currency = termDeposit.currency,
+					amount = Math.round(termDeposit.dailyWHT * termDeposit.term * 100.0)/100.0,
+					date = transferDate,
+					narrative = "WHT payment from INT TD to WHT",
+					termDeposit = termDeposit)
+			ret.add(whtPayment)
+		}
 
 		// Principal return from TD to CLI
 		val principalReturnPayment = Transfer(type = TransferType.principal,
@@ -82,14 +84,16 @@ class TermDepositService {
 				termDeposit = termDeposit)
 		ret.add(principalReturnPayment)
 
-		// Haircut payment from INT TD to CLI Haircut
-		val haircut = Transfer(type = TransferType.haircut,
-				currency = termDeposit.currency,
-				amount = termDeposit.dailyHaircut * termDeposit.term,
-				date = transferDate,
-				narrative = "Haircut payment from CLI TD to CLI",
-				termDeposit = termDeposit)
-		ret.add(haircut)
+		if (termDeposit.dailyHaircut != 0.0) {
+			// Haircut payment from INT TD to CLI Haircut
+			val haircut = Transfer(type = TransferType.haircut,
+					currency = termDeposit.currency,
+					amount = Math.round(termDeposit.dailyHaircut * termDeposit.term * 100.0)/100.0,
+					date = transferDate,
+					narrative = "Haircut payment from CLI TD to CLI",
+					termDeposit = termDeposit)
+			ret.add(haircut)
+		}
 
 		return ret
 	}
@@ -121,9 +125,9 @@ class TermDepositService {
 		/* if the user specified a maturity date, calculate the term.
 			Otherwise use the term provided to calculate the maturity date
 		 */
-		if (request.maturityDate != 0L) {
+		if (request.maturity != 0L) {
 			termDeposit.maturityDate = Date()
-			termDeposit.maturityDate.time = request.maturityDate
+			termDeposit.maturityDate.time = request.maturity/1000
 
 			termDeposit.term = calendarService.diffDays(termDeposit.maturityDate, termDeposit.valueDate)
 		} else {

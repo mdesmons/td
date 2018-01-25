@@ -17,8 +17,12 @@ class InterestService {
 	fun getRate(locationCode: String, term: Int, principal: Double, paymentType: TermDepositPaymentType): RateDTO {
 		/* some bogus formula here: 0.1% per slice of 10k principal, 0.1% per month term, penalty for monthly interest */
 		var rate = 0.001 * (principal / 10000).toInt() + 0.001 * (term / 30)
-		if (paymentType == TermDepositPaymentType.atMaturity) return RateDTO(rate * 100)
-		return RateDTO(value = (rate - 0.002) * 100)
+		if (paymentType == TermDepositPaymentType.monthly) {
+			rate -= 0.002
+		}
+
+		rate = Math.round(rate * 10000.0) / 100.0
+		return RateDTO(value = rate)
 	}
 
 	fun getRate(locationCode: String, openingDate: Date, maturityDate: Date, principal: Double, paymentType: TermDepositPaymentType): RateDTO {

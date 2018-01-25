@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router'
+import { accountTypeForDisplay } from '../../constants'
 var ImmutablePropTypes = require('react-immutable-proptypes');
 
 const TransferItem = ({transfer}) => (
@@ -14,7 +15,7 @@ const TermDeposit = ({onClose, onNoticePeriodClose, onHardshipClose, termDeposit
 	<div className="container mt-3">
 		<div className="row">
 			<div className="col bg-light rounded p-3">
-				<h2>Term Deposit Details</h2>
+				<h2 className="display-4">Term Deposit Details</h2>
 				<dl className="row">
 					<dt className="col-md-3">Source account</dt>
 					<dd className="col-md-9">{termDeposit.get('sourceAccount')}</dd>
@@ -23,11 +24,11 @@ const TermDeposit = ({onClose, onNoticePeriodClose, onHardshipClose, termDeposit
 					<dt className="col-md-3">Term</dt>
 					<dd className="col-md-9">{termDeposit.get('term')}</dd>
 					<dt className="col-md-3">Interest rate</dt>
-					<dd className="col-md-9">{termDeposit.get('interestRate')}</dd>
+					<dd className="col-md-9">{termDeposit.get('interest')}</dd>
 					<dt className="col-md-3">Haircut rate</dt>
-					<dd className="col-md-9">{termDeposit.get('haircutRate')}</dd>
-					<dt className="col-md-3">Monthly interest</dt>
-					<dd className="col-md-9">{termDeposit.get('monthlyInterest')}</dd>
+					<dd className="col-md-9">{termDeposit.get('haircut')}</dd>
+					<dt className="col-md-3">Account type</dt>
+					<dd className="col-md-3">{accountTypeForDisplay[termDeposit.get('paymentType')]}</dd>
 				</dl>
 			</div>
 		</div>

@@ -8,7 +8,6 @@ const Account = ({id, name}) => (
 class AddTermDeposit extends React.Component {
   constructor(props) {
 	super(props)
-
 	this.state =  {
 			principal: "",
 			interestRate: 0.0,
@@ -56,7 +55,7 @@ class AddTermDeposit extends React.Component {
 				output.term = this.state.termMonths * 30
 			} else if (this.state.maturityDate != "") {
 				// convert the date to seconds from the epoch
-				output.maturity = Math.floor((new Date(this.state.maturityDate)).getTime()/1000)
+				output.maturity = (new Date(this.state.maturityDate)).getTime()
 			} else {
 				this.props.onError("A Term in day/month or a Maturity Date must be entered")
 				return
@@ -138,7 +137,7 @@ class AddTermDeposit extends React.Component {
 				output.term = this.state.termMonths * 30
 			} else if (this.state.maturityDate != "") {
 				// convert the date to seconds from the epoch
-				output.maturity = Math.floor((new Date(this.state.maturityDate)).getTime()/1000)
+				output.maturity = (new Date(this.state.maturityDate)).getTime()
 			} else {
 				return
 			}
@@ -162,7 +161,7 @@ class AddTermDeposit extends React.Component {
 			<div className="col-md-1"></div>
 			<div className="col-md-10">
 				<div className="bg-light rounded p-3">
-					<h2>Create Term Deposit</h2>
+					<h2 className="display-4">Create Term Deposit</h2>
 					<p>This page lets you create a Term Deposit for a Cashactive Control customer.</p>
 					<form className="my-3" onSubmit={this.onSubmit} noValidate>
 						<div className="form-group">
@@ -174,7 +173,7 @@ class AddTermDeposit extends React.Component {
 
 						<div className="form-group">
 							<label htmlFor="principal">Principal</label>
-							<input type="number" className="form-control" id="principal" placeholder="Please enter a principal amount" value= {this.state.principal} onChange={this.onPrincipalChange} required/>
+							<input type="number" step="0.01" className="form-control" id="principal" placeholder="Please enter a principal amount" value= {this.state.principal} onChange={this.onPrincipalChange} required/>
 							<div className="invalid-feedback">
 								 Please enter a valid amount. Must be positive and less than the account balance
 							</div>
@@ -183,6 +182,9 @@ class AddTermDeposit extends React.Component {
 						<div className="form-group">
 							<label htmlFor="calculatedRate">Proposed Interest rate</label>
 							<input type="number" min="0" className="form-control" id="calculatedRate" value= {this.props.interestRate.get('value')} readOnly/>
+							<div className="invalid-feedback">
+								 Please enter a valid rate
+							</div>
 						</div>
 
 						<div className="form-check">
@@ -190,7 +192,7 @@ class AddTermDeposit extends React.Component {
 							<label htmlFor="overrideRate" className="form-check-label">override proposed rate</label>
 						</div>
 						<div className="form-group">
-							<input type="number" min="0" className="form-control" id="interestRate" value= {this.state.interestRate} onChange={this.onInterestRateChange} disabled={!this.state.overrideRate}/>
+							<input type="number" step="0.01" min="0" className="form-control" id="interestRate" value= {this.state.interestRate} onChange={this.onInterestRateChange} disabled={!this.state.overrideRate}/>
 						</div>
 
 						<div className="form-group">
@@ -219,14 +221,14 @@ class AddTermDeposit extends React.Component {
 
 						<div className="form-group">
 							<label htmlFor="haircut">Haircut rate</label>
-							<input type="number" min="0" className="form-control" id="haircut" placeholder="0.00" defaultValue= {this.state.haircut} onChange={this.onHaircutChange} disabled={!this.props.haircutAllowed}/>
+							<input type="number" step="0.01" min="0" className="form-control" id="haircut" placeholder="0.00" defaultValue= {this.state.haircut} onChange={this.onHaircutChange} disabled={!this.props.customer.get('haircutAllowed')}/>
 							<div className="invalid-feedback">
 								 Please enter a valid rate
 							</div>
 						</div>
 
 						<div className="form-check">
-							<input type="checkbox" className="form-check-inputEx" id="monthlyInterest" onChange={this.onMonthlyInterestChange}  disabled={!this.props.monthlyInterestAllowed}/>
+							<input type="checkbox" className="form-check-inputEx" id="monthlyInterest" onChange={this.onMonthlyInterestChange}  disabled={!this.props.customer.get('monthlyInterestAllowed')}/>
 							<label htmlFor="monthlyInterest" className="form-check-label">Monthly interest</label>
 						</div>
 
