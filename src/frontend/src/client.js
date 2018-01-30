@@ -49,6 +49,7 @@ export function restDelete(url, payload) {
 	return jquery.ajax(
 		{type: "DELETE",
 		 url: apiBase + url,
+		data: JSON.stringify(payload),
 		 headers: { "Authorization": "Bearer " + getAccessToken(),
 		 "Content-Type": "application/hal+json"}
 	 })

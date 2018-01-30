@@ -1,5 +1,5 @@
 import {Map} from 'immutable'
-import { restGet, restPut, restPost, normalizeComplexResponse } from '../client'
+import { restGet, restPut, restPost, restDelete, normalizeComplexResponse } from '../client'
 import { logout, setSession } from '../AuthService';
 import {fromJS} from 'immutable'
 
@@ -101,6 +101,22 @@ export const addTermDeposit = (id, data) => {
 			.fail((resp) => { dispatch(signalError(normalizeComplexResponse(resp.responseJSON)))})
   	}
 }
+
+const closeTermDepositImpl = (data) => {
+  return {
+    type: 'CLOSE_TERM_DEPOSIT',
+    data
+  }
+}
+
+export const closeTermDeposit = (id, request) => {
+	return function (dispatch) {
+		return restDelete('/api/v1/td/' + id + '/', request)
+			.done((data) => { dispatch(closeTermDepositImpl(normalizeComplexResponse(data)))})
+			.fail((data) => { dispatch(signalError(normalizeComplexResponse(data.responseJSON)))})
+	}
+}
+
 
 function baselineImpl(data)  {
 	return {

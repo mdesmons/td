@@ -18,7 +18,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
 	return {
 		onCreateTermDeposit: () => { browserHistory.push("/addTermDeposit/" + ownProps.params.id)},
-		onListTermDeposits: () => { browserHistory.push("/termDepositList")},
+		onListTermDeposits: () => { browserHistory.push("/termDepositList/" + ownProps.params.id)},
 		onCreateBulkTermDeposit: () => { browserHistory.push("/addBulkTermDeposit/" + ownProps.params.id)},
 		onClearError: () => { dispatch(clearError()) }
 	}

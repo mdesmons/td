@@ -11,10 +11,10 @@ const mapStateToProps = state => {
 	}
 }
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch, ownProps) => {
 	return {
 		onTermDepositSelected: id => {
-			browserHistory.push('/termDeposit/' + id)
+			browserHistory.push('/termDeposit/' + ownProps.params.id + '/' + id)
 		}
 	}
 }

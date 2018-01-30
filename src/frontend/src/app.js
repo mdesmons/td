@@ -35,8 +35,8 @@ const initializeUI = (store) => {
 			  <IndexRedirect to={indexRoute(store)} />
 			  <Route path="onboard" component={containers.OnboardContainer} />
 			  <Route path="home" component={containers.HomeContainer} />
-			  <Route path="termDepositList" component={containers.TermDepositListContainer} />
-			  <Route path="termDeposit/:id" component={containers.TermDepositContainer} />
+			  <Route path="termDepositList/:id" component={containers.TermDepositListContainer} />
+			  <Route path="termDeposit/:customerId/:id" component={containers.TermDepositContainer} />
 			  <Route path="customerList" component={containers.CustomerListContainer} />
 			  <Route path="customer/:id" component={containers.CustomerContainer} />
 			  <Route path="addTermDeposit/:id" component={containers.AddTermDepositContainer} />

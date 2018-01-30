@@ -1,9 +1,7 @@
 package com.gresham.td.service
 
-import com.gresham.td.model.TermDeposit
-import com.gresham.td.model.TermDepositPaymentType
-import com.gresham.td.model.Transfer
-import com.gresham.td.model.TransferType
+import com.gresham.td.model.*
+import com.gresham.td.model.dto.CloseTermDepositRequestDTO
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.gresham.td.model.dto.TermDepositDTO
@@ -24,9 +22,6 @@ class TermDepositService {
 	lateinit var termDepositRepository: TermDepositRepository
 
 	@Autowired
-	lateinit var transferRepository: TransferRepository
-
-	@Autowired
 	lateinit var interestService: InterestService
 
 	@Autowired
@@ -38,7 +33,7 @@ class TermDepositService {
 	@Autowired
 	lateinit var calendarService: CalendarService
 
-	private fun createTransferFromPrincipal(termDeposit: TermDeposit) : Transfer {
+	private fun createTransferFromPrincipal(termDeposit: TermDeposit): Transfer {
 		val ret = Transfer(type = TransferType.principal,
 				currency = termDeposit.currency,
 				amount = termDeposit.principal,
@@ -49,13 +44,12 @@ class TermDepositService {
 	}
 
 
-
-	private fun createTransfers(termDeposit: TermDeposit, term: Long) : List<Transfer> {
+	private fun createTransfers(termDeposit: TermDeposit, term: Long): List<Transfer> {
 		val ret = mutableListOf<Transfer>()
 		// interest payment from INT TD to CLI
 		val interestPayment = Transfer(type = TransferType.interest,
 				currency = termDeposit.currency,
-				amount = Math.round(termDeposit.dailyNetClientInterest * term * 100.0)/100.0,
+				amount = Math.round(termDeposit.dailyNetClientInterest * term * 100.0) / 100.0,
 				narrative = "Interest from INT TD to CLI",
 				termDeposit = termDeposit)
 		ret.add(interestPayment)
@@ -64,7 +58,7 @@ class TermDepositService {
 			// WHT payment from INT TD to CLI
 			val whtPayment = Transfer(type = TransferType.wht,
 					currency = termDeposit.currency,
-					amount = Math.round(termDeposit.dailyWHT * term * 100.0)/100.0,
+					amount = Math.round(termDeposit.dailyWHT * term * 100.0) / 100.0,
 					narrative = "WHT payment from INT TD to WHT",
 					termDeposit = termDeposit)
 			ret.add(whtPayment)
@@ -74,7 +68,7 @@ class TermDepositService {
 			// Haircut payment from INT TD to CLI Haircut
 			val haircut = Transfer(type = TransferType.haircut,
 					currency = termDeposit.currency,
-					amount = Math.round(termDeposit.dailyHaircut * term * 100.0)/100.0,
+					amount = Math.round(termDeposit.dailyHaircut * term * 100.0) / 100.0,
 					narrative = "Haircut payment from CLI TD to CLI",
 					termDeposit = termDeposit)
 			ret.add(haircut)
@@ -82,7 +76,17 @@ class TermDepositService {
 		return ret
 	}
 
-	private fun createTransfersForAtCallPayment(termDeposit: TermDeposit) : List<Transfer> {
+	private fun createTransfersForPrincipalReturn(termDeposit: TermDeposit): Transfer {
+		val principalReturnPayment = Transfer(type = TransferType.principal,
+				currency = termDeposit.currency,
+				amount = termDeposit.principal,
+				date = termDeposit.maturityDate,
+				narrative = "Principal return from CLI TD to CLI",
+				termDeposit = termDeposit)
+		return principalReturnPayment
+	}
+
+	private fun createTransfersForAtCallPayment(termDeposit: TermDeposit): List<Transfer> {
 		val ret = mutableListOf<Transfer>()
 
 		// create final payment
@@ -91,24 +95,18 @@ class TermDepositService {
 		ret.addAll(transfers)
 
 		// Principal return from TD to CLI
-		val principalReturnPayment = Transfer(type = TransferType.principal,
-				currency = termDeposit.currency,
-				amount = termDeposit.principal,
-				date = termDeposit.maturityDate,
-				narrative = "Principal return from CLI TD to CLI",
-				termDeposit = termDeposit)
-		ret.add(principalReturnPayment)
+		ret.add(createTransfersForPrincipalReturn(termDeposit))
 
 		return ret
 	}
 
-	private fun createTransfersForMonthlyPayment(termDeposit: TermDeposit) : List<Transfer> {
+	private fun createTransfersForMonthlyPayment(termDeposit: TermDeposit): List<Transfer> {
 		val ret = mutableListOf<Transfer>()
 		var date = Date(termDeposit.valueDate.time)
 
 		date = calendarService.addDays(date, 30)
 
-		while(date.before(termDeposit.maturityDate)) {
+		while (date.before(termDeposit.maturityDate)) {
 			val transfers = createTransfers(termDeposit, 30)
 			transfers.forEach { it.date = date }
 			ret.addAll(transfers)
@@ -116,24 +114,19 @@ class TermDepositService {
 		}
 
 		// create final payment
-		var lastPaymentTerm =  termDeposit.term.rem(30).toLong()
+		var lastPaymentTerm = termDeposit.term.rem(30).toLong()
 		val transfers = createTransfers(termDeposit, lastPaymentTerm)
 		transfers.forEach { it.date = termDeposit.maturityDate }
 		ret.addAll(transfers)
 
 		// Principal return from TD to CLI
-		val principalReturnPayment = Transfer(type = TransferType.principal,
-				currency = termDeposit.currency,
-				amount = termDeposit.principal,
-				date = termDeposit.maturityDate,
-				narrative = "Principal return from CLI TD to CLI",
-				termDeposit = termDeposit)
-		ret.add(principalReturnPayment)
+		ret.add(createTransfersForPrincipalReturn(termDeposit))
 
 		return ret
 	}
 
-	fun addTermDeposit(principal: Principal?, locationCode: String, request: TermDepositRequestDTO) : TermDepositDTO {
+	// TODO check the user has access to the location code
+	fun addTermDeposit(principal: Principal?, locationCode: String, request: TermDepositRequestDTO): TermDepositDTO {
 		if (principal == null) {
 			throw SecurityException("Unknown user")
 		}
@@ -177,7 +170,7 @@ class TermDepositService {
 		termDeposit.dailyGrossCustomerInterest = termDeposit.interest * termDeposit.principal / (360.0 * 100.0)
 
 		// daily customer profit
-		termDeposit.dailyHaircut = termDeposit.haircut  * termDeposit.principal / (360.0 * 100.0)
+		termDeposit.dailyHaircut = termDeposit.haircut * termDeposit.principal / (360.0 * 100.0)
 
 		// daily interest minus customer profit
 		termDeposit.dailyGrossClientInterest = termDeposit.dailyGrossCustomerInterest - termDeposit.dailyHaircut
@@ -203,5 +196,70 @@ class TermDepositService {
 		customerRepository.save(customer)
 
 		return TermDepositDTO(termDeposit)
+	}
+
+	// TODO check the user has access to the location code
+	fun closeTermDeposit(principal: Principal?, id: Long, request: CloseTermDepositRequestDTO): TermDepositDTO {
+		var termDeposit = termDepositRepository.findOne(id)
+		if (termDeposit == null) {
+			// error
+		}
+
+		if (termDeposit.status != TermDepositStatus.opened) {
+			// error
+
+		}
+
+		// financial hardship: nuke pending transactions, reimburse principal
+		// system: nuke pending transactions, reimburse principal
+		// notice period: if AtCall, reject. Otherwise nuke transactions & create last monthly interest (w/ penalty), reimburse principal
+		// else: error
+
+		// TODO: Make sure no interest was paid
+		/* TODO : Check dates. If closing on a non business day, the principal return will be on the next business day, and the closing date will then be next-next-business day
+		 */
+		if (request.reason in listOf(TermDepositCloseReason.financialHardship, TermDepositCloseReason.system)) {
+			termDeposit.transfers.removeIf { it.type != TransferType.principal }
+			termDeposit.transfers.add(createTransfersForPrincipalReturn(termDeposit))
+
+			// the principal is returned, and we'll receive confirmation in the next day BTR, then only can we close the TD
+			termDeposit.closingDate = calendarService.nextBusinessDay(Date())
+			termDeposit.reasonForClose = request.reason
+			termDeposit.status = TermDepositStatus.pendingClosed
+			termDepositRepository.save(termDeposit)
+		} else if (request.reason == TermDepositCloseReason.noticePeriod) {
+			// check the end of notice period is not post maturity
+			var endOfNoticePeriod = Date()
+			endOfNoticePeriod = calendarService.addDays(endOfNoticePeriod, 31)
+			if (termDeposit.maturityDate.before(endOfNoticePeriod)) {
+				// error
+			} else {
+				// TODO create last payment, with interest penalty
+				termDeposit.transfers.removeIf { it.type != TransferType.principal }
+				termDeposit.transfers.add(createTransfersForPrincipalReturn(termDeposit))
+
+				// the principal is returned, and we'll receive confirmation in the next day BTR, then only can we close the TD
+				termDeposit.closingDate = calendarService.nextBusinessDay(endOfNoticePeriod)
+				termDeposit.reasonForClose = request.reason
+				termDeposit.status = TermDepositStatus.pendingClosed
+				termDepositRepository.save(termDeposit)
+			}
+		} else {
+			// return an error
+		}
+
+		return TermDepositDTO(termDeposit)
+	}
+
+	// TODO check credentials
+	/* Close all TDs that are marked as PendingClose, and whose close date is today or before */
+	fun closePendingTermDeposits(principal: Principal?): List<TermDepositDTO> {
+		var tomorrow = Date()
+		tomorrow = calendarService.addDays(tomorrow, 1)
+
+		var termDeposits = termDepositRepository.findByStatus(TermDepositStatus.pendingClosed).filter { it.closingDate.before(tomorrow) }
+		termDeposits.forEach { it.status = TermDepositStatus.closed }
+		termDepositRepository.save(termDeposits)
+		return termDeposits.map { TermDepositDTO(it) }
 	}
 }

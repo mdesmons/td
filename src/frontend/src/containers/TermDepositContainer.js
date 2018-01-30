@@ -1,5 +1,5 @@
 import { connect } from 'react-redux'
-import { signalError, clearError } from '../actions'
+import { signalError, clearError, closeTermDeposit } from '../actions'
 import {fromJS} from 'immutable'
 import TermDeposit from '../components/admin/TermDeposit'
 import { browserHistory } from 'react-router'
@@ -21,9 +21,9 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch, ownProps) => {
 	return {
-		onClose: () => { console.log("Closing of TD")},
-		onNoticePeriodClose: () => { console.log("Notice Period Closing of TD")},
-		onHardshipClose: () => { console.log("Hardship Closing of TD")},
+		onClose: () => { browserHistory.push('/customer/' + ownProps.params.customerId);; dispatch(closeTermDeposit(ownProps.params.id, {reason: 4})).then(() => { })},
+		onNoticePeriodClose: () => { dispatch(closeTermDeposit(ownProps.params.id, {reason: 2})).then(() => {browserHistory.push('/customer/' + ownProps.params.customerId)})},
+		onHardshipClose: () => { dispatch(closeTermDeposit(ownProps.params.id, {reason: 3})).then(() => {browserHistory.push('/customer/' + ownProps.params.customerId)})},
 		onClearError: () => { dispatch(clearError()) }
 	}
 }

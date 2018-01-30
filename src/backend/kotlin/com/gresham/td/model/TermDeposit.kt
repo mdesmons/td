@@ -4,25 +4,24 @@ import java.util.*
 import javax.persistence.*
 import com.fasterxml.jackson.annotation.JsonValue
 
-
-/*
-enum class PlayerGender {
-	any,
-	female,
-	male,
-	other;
+enum class TermDepositStatus {
+	opened,
+	pendingClosed,
+	closed;
 
 	@JsonValue
 	fun toValue(): Int {
 		return ordinal
 	}
 }
-*/
 
-enum class TermDepositStatus {
-	opened,
-	pendingClosed,
-	closed;
+enum class TermDepositCloseReason {
+	none,
+	maturityReached,
+	noticePeriod,
+	financialHardship,
+	system;
+
 
 	@JsonValue
 	fun toValue(): Int {
@@ -68,6 +67,7 @@ class TermDeposit(
 		var dailyGrossClientInterest: Double = 0.0,
 		var dailyWHT: Double = 0.0,
 		var dailyNetClientInterest: Double = 0.0,
+		var reasonForClose: TermDepositCloseReason = TermDepositCloseReason.none,
 
 		// a TD has several transfers
 		@OneToMany(mappedBy = "termDeposit", cascade = arrayOf(CascadeType.ALL), fetch = FetchType.EAGER)

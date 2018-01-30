@@ -180,6 +180,7 @@
 	</dependencies>
 
 	<build>
+
 		<sourceDirectory>${project.basedir}/kotlin</sourceDirectory>
 		<resources>
 		<resource>
@@ -187,6 +188,26 @@
 		</resource>
 		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.jvnet.jaxb2.maven2</groupId>
+				<artifactId>maven-jaxb2-plugin</artifactId>
+				<version>0.13.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<schemaDirectory>resources/wsdl</schemaDirectory>
+					<schemaLanguage>WSDL</schemaLanguage>
+					<schemaIncludes>
+						<schemaInclude>*.xml</schemaInclude>
+					</schemaIncludes>
+					<generatePackage>cashfac.wsdl</generatePackage>
+				</configuration>
+			</plugin>
 			<plugin>
 				<artifactId>kotlin-maven-plugin</artifactId>
 				<groupId>org.jetbrains.kotlin</groupId>
