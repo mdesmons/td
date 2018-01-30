@@ -8,7 +8,6 @@ const mapStateToProps = (state, props) => {
 	return {
 		customers: state.get('customers').toList(),
 		termDeposits: state.get('termDeposits').toList(),
-		currentCustomer: state.get('currentCustomer'),
 		connectionStatus: state.get('connectionStatus'),
 		children: props.children
 	}
@@ -16,9 +15,6 @@ const mapStateToProps = (state, props) => {
 
 const mapDispatchToProps = dispatch => {
 	return {
-		onLogin : () => {
-			login()
-		},
 		onLogout : () => {
 			logout()
 			dispatch(logoutAction())

@@ -30,7 +30,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 			dispatch(signalError(fromJS({error: { message } })))
 		},
 		onSubmit: (data) => {
-			dispatch(addTermDeposit(ownProps.params.id, data)).then(() => {browserHistory.push('/customer/' + ownProps.params.id)})
+			dispatch(addTermDeposit(ownProps.params.id, [data])).then(() => {browserHistory.push('/customer/' + ownProps.params.id)})
 		},
 		onRecalculateInterest: (data) => {
 			dispatch(calculateInterest(ownProps.params.id, data))

@@ -1,6 +1,6 @@
 import React from 'react'
 
-const AdminHome = ({ladders, players, subscriptions, subscription}) => (
+const AdminHome = ({}) => (
 		<div className="container-fluid">
 
         </div>

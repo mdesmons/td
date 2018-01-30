@@ -6,13 +6,13 @@ const initialStatus = fromJS({
 })
 
 const connectionStatus = (state = initialStatus, action) => {
+  	console.log("entering error reducer")
 	switch (action.type) {
-      case 'BASELINE':
-   		return action.data.get('connectionStatus')
     case 'LOGOUT':
 		return state.set('logged', false).set('admin', false)
     case 'LOGIN':
-		return state.set('logged', true)
+		console.log(action.data.toJS())
+		return action.data.get('connectionStatus')
      default:
         return state
   }

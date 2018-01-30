@@ -5,9 +5,9 @@ import Login from './public/Home'
 import {playerStatus} from '../constants'
 
 const HomeImpl = ({connectionStatus, customers, onLogin}) => {
-	console.log("User logged: " + connectionStatus.get('logged') + " admin: " + connectionStatus.get('desk'))
+	console.log("User logged: " + connectionStatus.get('logged') + " scope: " + connectionStatus.get('scope'))
 	if (connectionStatus.get('logged')) {
-		if (connectionStatus.get('desk')) return (<AdminHome/>)
+		if (connectionStatus.get('scope') === 'desk') return (<AdminHome/>)
 		return (<StandardHome customers={customers}/>)
 	} else {
 		return (<Login onLogin={onLogin}/>)

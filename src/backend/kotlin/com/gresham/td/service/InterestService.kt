@@ -22,17 +22,18 @@ class InterestService {
 		}
 
 		rate = Math.round(rate * 10000.0) / 100.0
+		logger.info("Rate request for term of " + term + " days, principal " + principal + ". Calculated rate: " + rate)
 		return RateDTO(value = rate)
 	}
 
-	fun getRate(locationCode: String, openingDate: Date, maturityDate: Date, principal: Double, paymentType: TermDepositPaymentType): RateDTO {
+	fun getRate(locationCode: String, openingDate: Date, maturity: Date, principal: Double, paymentType: TermDepositPaymentType): RateDTO {
 		var valueDate = openingDate
 
 		if (!calendarService.isBusinessDay(openingDate)) {
 			valueDate = calendarService.nextBusinessDay(openingDate)
 		}
 
-		val term = calendarService.diffDays(maturityDate, valueDate)
+		val term = calendarService.diffDays(maturity, valueDate)
 		return getRate(locationCode,  term, principal, paymentType)
 	}
 

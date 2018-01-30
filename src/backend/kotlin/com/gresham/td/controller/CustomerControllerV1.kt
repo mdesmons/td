@@ -44,8 +44,10 @@ class CustomerControllerV1() {
 
 	// create a TD for a customer
 	@PostMapping("/{location_code}/td/")
-	fun addTermDeposit(principal: Principal?, @PathVariable location_code: String, @RequestBody request: TermDepositRequestDTO) : Map<String, List<TermDepositDTO>>
-			= hashMapOf("termDeposits" to listOf<TermDepositDTO>(termDepositService.addTermDeposit(principal, location_code, request)))
+	fun addTermDeposit(principal: Principal?, @PathVariable location_code: String, @RequestBody request: List<TermDepositRequestDTO>) : Map<String, List<TermDepositDTO>> {
+		var response = request.map { termDepositService.addTermDeposit(principal, location_code, it) }
+		return hashMapOf("termDeposits" to response)
+	}
 
 	@PutMapping("/{location_code}/rate/")
 	fun rate(@PathVariable location_code: String, @RequestBody request: RateRequestDTO): Map<String, List<RateDTO>> {
@@ -53,7 +55,7 @@ class CustomerControllerV1() {
 			return hashMapOf("interestRate" to listOf(rateService.getRate(location_code, request.term, request.principal, request.paymentType)))
 		} else {
 			val maturityDate = Date()
-			maturityDate.time = request.maturityDate
+			maturityDate.time = request.maturity
 			return hashMapOf("interestRate" to listOf(rateService.getRate(location_code, Date(), maturityDate, request.principal, request.paymentType)))
 		}
 	}

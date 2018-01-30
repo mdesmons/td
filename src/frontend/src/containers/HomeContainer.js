@@ -1,5 +1,5 @@
 import { connect } from 'react-redux'
-import {login} from '../actions'
+import {login, baseline} from '../actions'
 import Home from '../components/Home'
 import { browserHistory } from 'react-router'
 
@@ -12,7 +12,10 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
 	return {
-   		onLogin : userData => { dispatch(login(userData)).then(() => {	console.log("Login succeeded"); browserHistory.push('/') })}
+   		onLogin : userData => {
+   			dispatch(login(userData))
+   			.then(() => { dispatch(baseline()) })
+   			.then(() => { browserHistory.push('/') })}
 	}
 }
 

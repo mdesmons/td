@@ -7,6 +7,15 @@ String.prototype.asPhone = function(str){
 	return (this.substring(0, 4) + ' ' + this.substring(4, 7) + ' ' + this.substring(7, 10))
 }
 
+Number.prototype.percent = function() {
+  return this.toLocaleString({},
+  	{
+  		minimumFractionDigits:2,
+  		maximumFractionDigits:2,
+  		style:"decimal"
+  	})
+
+}
 
 Number.prototype.amount = function() {
   return this.toLocaleString({},
@@ -14,7 +23,7 @@ Number.prototype.amount = function() {
   		currency:'AUD',
   		minimumFractionDigits:2,
   		maximumFractionDigits:2,
-  		currencyDisplay:"code",
+  		currencyDisplay:"symbol",
   		style:"currency"
   	})
 

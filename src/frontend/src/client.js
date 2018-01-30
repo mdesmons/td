@@ -66,6 +66,7 @@ export function normalizeComplexResponse(originalData) {
 	const interestRateSchema = new schema.Entity('interestRate');
 
 	const errorSchema = new schema.Entity('error');
+	const connectionStatusSchema = new schema.Entity('connectionStatus');
 
 /*
 	if (originalData.subscriptions != undefined) {
@@ -102,6 +103,7 @@ export function normalizeComplexResponse(originalData) {
 	console.log(normalizedModel)
 
 	normalizedModel.error = originalData.error
+	normalizedModel.connectionStatus = originalData.connectionStatus
 
 	let model = fromJS(normalizedModel);
 

@@ -1,6 +1,6 @@
 import {Map} from 'immutable'
 import { restGet, restPut, restPost, normalizeComplexResponse } from '../client'
-import { logout, isLoggedIn, getAccessToken, setAccessToken, isAdmin, handleAuthentication, refresh, setSession, hasScope} from '../AuthService';
+import { logout, setSession } from '../AuthService';
 import {fromJS} from 'immutable'
 
 export const signalError = (data) => {
@@ -29,7 +29,6 @@ export const onboardImpl = (data) => {
   }
 }
 
-
 export const onboard = (request) => {
 	return function (dispatch) {
 		return restPost('/api/v1/customer/', request)
@@ -38,20 +37,21 @@ export const onboard = (request) => {
 	}
 }
 
-
-const loginImpl = () => {
+export const loginImpl = (data) => {
   return {
-    type: 'LOGIN'
+    type: 'LOGIN',
+    data
   }
 }
 
 export const login = (data) => {
   	return function (dispatch) {
+  		/* The login API will return a JWT token in the header.
+  		   We decode it and pass it to the connectionStatus reducer to update the state */
   		return restPost('/login', data, true)
   			.done((data, txt, jqXHR) =>  {
   				var accessToken = jqXHR.getResponseHeader("Authorization").replace("Bearer ", "")
-  				setSession(accessToken)
-  			 	dispatch(loginImpl())})
+  			 	dispatch(loginImpl(normalizeComplexResponse(setSession(accessToken))))})
   			.fail((data) =>  { dispatch(signalError(normalizeComplexResponse(data.responseJSON))) })
   	}
 }
@@ -102,37 +102,6 @@ export const addTermDeposit = (id, data) => {
   	}
 }
 
-const unsuspendPlayerImpl = (data) => {
-  return {
-    type: 'UNSUSPEND_PLAYER',
-    data
-  }
-}
-
-export const unsuspendPlayer = (request) => {
-	return function (dispatch) {
-		return restPut('/api/player/unsuspend/' + request.playerId, request)
-			.done((data) => { dispatch(unsuspendPlayerImpl(normalizeComplexResponse(data)))})
-			.fail((data) => { dispatch(signalError(normalizeComplexResponse(data.responseJSON)))})
-	}
-}
-
-
-const setRankImpl = (data) => {
-  return {
-    type: 'SET_RANK',
-    data
-  }
-}
-
-export const setRank = (request) => {
-	return function (dispatch) {
-		return restPut('/api/admin/rank/' + request.ladderId, request)
-			.done((data) => { dispatch(setRankImpl(normalizeComplexResponse(data)))})
-			.fail((data) => { dispatch(signalError(normalizeComplexResponse(data.responseJSON)))})
-	}
-}
-
 function baselineImpl(data)  {
 	return {
 		type: 'BASELINE',
@@ -146,13 +115,14 @@ let ETag = '0'
    If this is a regular user, get their TDs
 */
 export const baseline = () => {
-	let url = hasScope("desk") ? "/api/v1/customer/":"/api/player/"
+	let url = "/api/v1/customer/"
 	return function (dispatch) {
-		return restGet(url, {"If-None-Match": ETag})
+//		return restGet(url, {"If-None-Match": ETag})
+		return restGet(url)
 		.done((response, textStatus, request) => {
 			if (request.status == 200) {
 				ETag = 	request.getResponseHeader('etag')
-				let data = normalizeComplexResponse(response).set('connectionStatus', fromJS({logged: isLoggedIn(), desk: true}))
+				let data = normalizeComplexResponse(response)
 				dispatch(baselineImpl(data))
 			}
 		})

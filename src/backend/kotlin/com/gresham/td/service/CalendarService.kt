@@ -49,6 +49,6 @@ class CalendarService {
 				.atZone(ZoneId.systemDefault())
 				.toLocalDate()
 
-		return ChronoUnit.DAYS.between(d1, d2).toInt()
+		return ChronoUnit.DAYS.between(d2, d1).toInt()
 	}
 }

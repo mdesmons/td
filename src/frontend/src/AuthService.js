@@ -10,79 +10,19 @@ const CLIENT_DOMAIN = 'tennisladder.au.auth0.com';
 const SCOPE = 'standard openid email offline_access';
 const AUDIENCE = 'https://www.tennisladder.fun';
 
-
-var auth = new auth0.WebAuth({
-  clientID: CLIENT_ID,
-  domain: CLIENT_DOMAIN
-});
-
-export function login() {
-  auth.authorize({
-    responseType: 'token id_token',
-    redirectUri: config.redirect,
-    audience: AUDIENCE,
-    scope: SCOPE
-  });
-}
-
 export function logout() {
-  clearIdToken();
   clearAccessToken();
-}
-
-export function getIdToken() {
-  return localStorage.getItem(ID_TOKEN_KEY);
 }
 
 export function getAccessToken() {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
-function clearIdToken() {
-  localStorage.removeItem(ID_TOKEN_KEY);
-}
 
 function clearAccessToken() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
-// Helper function that will allow us to extract the access_token and id_token
-function getParameterByName(name) {
-  let match = RegExp('[#&]' + name + '=([^&]*)').exec(window.location.hash);
-  return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
-}
-
-// Get and store access_token in local storage
-export function setAccessToken(accessToken) {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-}
-
-// Get and store id_token in local storage
-export function setIdToken() {
-  let idToken = getParameterByName('id_token');
-  localStorage.setItem(ID_TOKEN_KEY, idToken);
-}
-
-export function isLoggedIn() {
-  const accessToken = getAccessToken();
-  return !!accessToken && !isTokenExpired(accessToken);
-}
-
-export function isAdmin() {
-	if (localStorage.getItem('scopes') == null) {
-	return false
-	}
-
-	return JSON.parse(localStorage.getItem('scopes')).includes("desk")
-}
-
-export function hasScope(scope) {
-	if (localStorage.getItem('scopes') == null) {
-	return false
-	}
-
-	return JSON.parse(localStorage.getItem('scopes')).includes(scope)
-}
 
 function getTokenExpirationDate(encodedToken) {
   const token = decode(encodedToken);
@@ -100,39 +40,42 @@ function isTokenExpired(token) {
   return expirationDate < new Date();
 }
 
-export function setSession(encodedToken) {
+function getConnectionStatus(encodedToken) {
     const token = decode(encodedToken);
-	console.log(token)
-    // Set the time that the access token will expire at
+    // Get the time that the access token will expire at
     const expiresAt = getTokenExpirationDate(encodedToken);
-    const scopes = token.scope || '';
+    const scope = token.scope || '';
 
-    localStorage.setItem('access_token', encodedToken);
-    localStorage.setItem('expires_at', expiresAt);
-    localStorage.setItem('scopes', JSON.stringify(scopes.split(' ')));
-  }
+    /* Return an object that will be used to update the model */
+    return {
+    	expiration: expiresAt,
+    	scope: scope
+   	}
+}
 
- export function handleAuthentication(callback) {
-    auth.parseHash({hash: window.location.hash}, (err, authResult) => {
-    	if (authResult && authResult.accessToken && authResult.idToken) {
-        	window.location.hash = '';
-        	setSession(authResult);
-        	if (callback) { callback(null) }
-      	} else if (err) {
-			console.log(err);
-			alert('Error: ${err.error}. Check the console for further details.');
-			callback(err)
-      } else {
-        	if (callback) { callback(null) }
-      }
-    });
-  }
+export function setSession(encodedToken) {
+     localStorage.setItem('access_token', encodedToken);
 
-export function refresh(callback) {
- auth.checkSession({
-    responseType: 'token id_token',
-    redirectUri: config.redirect,
-    audience: AUDIENCE,
-    scope: SCOPE
-  }, callback);
+    /* Return an object that will be used to update the model */
+     return {
+     connectionStatus: {
+     ...getConnectionStatus(encodedToken),
+     logged: true
+     }}
+}
+
+export function populateConnectionStatus() {
+	const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+	if (token == null || isTokenExpired(token)) {
+	    return {
+         connectionStatus: {
+	         logged: false
+         }}
+	} else {
+		 return {
+		 connectionStatus: {
+		 ...getConnectionStatus(token),
+		 logged: true
+		 }}
+	}
 }

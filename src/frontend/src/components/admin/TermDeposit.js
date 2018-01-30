@@ -7,7 +7,7 @@ const TransferItem = ({transfer}) => (
 		<tr>
 		<td>{(new Date(transfer.get('date'))).toLocaleString().substr(0, 10)}</td>
 		<td>{transfer.get('narrative')}</td>
-		<td>{transfer.get('amount')}</td>
+		<td className="text-right">{transfer.get('amount').amount()}</td>
 		</tr>
 )
 
@@ -20,13 +20,13 @@ const TermDeposit = ({onClose, onNoticePeriodClose, onHardshipClose, termDeposit
 					<dt className="col-md-3">Source account</dt>
 					<dd className="col-md-9">{termDeposit.get('sourceAccount')}</dd>
 					<dt className="col-md-3">Principal amount</dt>
-					<dd className="col-md-9">{termDeposit.get('principal')}</dd>
+					<dd className="col-md-9">{termDeposit.get('principal').amount()}</dd>
 					<dt className="col-md-3">Term</dt>
-					<dd className="col-md-9">{termDeposit.get('term')}</dd>
+					<dd className="col-md-9">{termDeposit.get('term') + " days"}</dd>
 					<dt className="col-md-3">Interest rate</dt>
-					<dd className="col-md-9">{termDeposit.get('interest')}</dd>
+					<dd className="col-md-9">{termDeposit.get('interest').percent() + "%"}</dd>
 					<dt className="col-md-3">Haircut rate</dt>
-					<dd className="col-md-9">{termDeposit.get('haircut')}</dd>
+					<dd className="col-md-9">{termDeposit.get('haircut').percent() + "%"}</dd>
 					<dt className="col-md-3">Account type</dt>
 					<dd className="col-md-3">{accountTypeForDisplay[termDeposit.get('paymentType')]}</dd>
 				</dl>
@@ -40,7 +40,7 @@ const TermDeposit = ({onClose, onNoticePeriodClose, onHardshipClose, termDeposit
 						<tr>
 							<th scope="col">Date</th>
 							<th scope="col">Type</th>
-							<th scope="col">Amount</th>
+							<th scope="col" className="text-right">Amount</th>
 						</tr>
 					</thead>
 					<tbody>

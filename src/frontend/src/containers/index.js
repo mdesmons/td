@@ -6,6 +6,7 @@ import OnboardContainer from './OnboardContainer';
 import AppContainer from './AppContainer';
 import HomeContainer  from './HomeContainer';
 import AddTermDepositContainer  from './AddTermDepositContainer';
+import AddBulkTermDepositContainer  from './AddBulkTermDepositContainer';
 
 export default {
 	appContainer: AppContainer,
@@ -15,6 +16,7 @@ export default {
 	TermDepositContainer,
 	HomeContainer,
 	AddTermDepositContainer,
+	AddBulkTermDepositContainer,
 	OnboardContainer
 }
 

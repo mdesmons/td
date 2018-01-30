@@ -38,7 +38,7 @@ class TermDepositService {
 	@Autowired
 	lateinit var calendarService: CalendarService
 
-	fun createTransferFromPrincipal(termDeposit: TermDeposit) : Transfer {
+	private fun createTransferFromPrincipal(termDeposit: TermDeposit) : Transfer {
 		val ret = Transfer(type = TransferType.principal,
 				currency = termDeposit.currency,
 				amount = termDeposit.principal,
@@ -48,18 +48,14 @@ class TermDepositService {
 		return ret
 	}
 
-	fun createTransfersForMaturityPayment(termDeposit: TermDeposit) : List<Transfer> {
+
+
+	private fun createTransfers(termDeposit: TermDeposit, term: Long) : List<Transfer> {
 		val ret = mutableListOf<Transfer>()
-		val maturityDate = calendarService.addDays(termDeposit.valueDate, termDeposit.term)
-		var transferDate = maturityDate;
-		if (!calendarService.isBusinessDay(maturityDate)) {
-			transferDate = calendarService.nextBusinessDay(transferDate)
-		}
 		// interest payment from INT TD to CLI
 		val interestPayment = Transfer(type = TransferType.interest,
 				currency = termDeposit.currency,
-				amount = Math.round(termDeposit.dailyNetClientInterest * termDeposit.term * 100.0)/100.0,
-				date = transferDate,
+				amount = Math.round(termDeposit.dailyNetClientInterest * term * 100.0)/100.0,
 				narrative = "Interest from INT TD to CLI",
 				termDeposit = termDeposit)
 		ret.add(interestPayment)
@@ -68,38 +64,72 @@ class TermDepositService {
 			// WHT payment from INT TD to CLI
 			val whtPayment = Transfer(type = TransferType.wht,
 					currency = termDeposit.currency,
-					amount = Math.round(termDeposit.dailyWHT * termDeposit.term * 100.0)/100.0,
-					date = transferDate,
+					amount = Math.round(termDeposit.dailyWHT * term * 100.0)/100.0,
 					narrative = "WHT payment from INT TD to WHT",
 					termDeposit = termDeposit)
 			ret.add(whtPayment)
 		}
 
-		// Principal return from TD to CLI
-		val principalReturnPayment = Transfer(type = TransferType.principal,
-				currency = termDeposit.currency,
-				amount = termDeposit.principal,
-				date = transferDate,
-				narrative = "Principal return from CLI TD to CLI",
-				termDeposit = termDeposit)
-		ret.add(principalReturnPayment)
-
 		if (termDeposit.dailyHaircut != 0.0) {
 			// Haircut payment from INT TD to CLI Haircut
 			val haircut = Transfer(type = TransferType.haircut,
 					currency = termDeposit.currency,
-					amount = Math.round(termDeposit.dailyHaircut * termDeposit.term * 100.0)/100.0,
-					date = transferDate,
+					amount = Math.round(termDeposit.dailyHaircut * term * 100.0)/100.0,
 					narrative = "Haircut payment from CLI TD to CLI",
 					termDeposit = termDeposit)
 			ret.add(haircut)
 		}
+		return ret
+	}
+
+	private fun createTransfersForAtCallPayment(termDeposit: TermDeposit) : List<Transfer> {
+		val ret = mutableListOf<Transfer>()
+
+		// create final payment
+		val transfers = createTransfers(termDeposit, termDeposit.term.toLong())
+		transfers.forEach { it.date = termDeposit.maturityDate }
+		ret.addAll(transfers)
+
+		// Principal return from TD to CLI
+		val principalReturnPayment = Transfer(type = TransferType.principal,
+				currency = termDeposit.currency,
+				amount = termDeposit.principal,
+				date = termDeposit.maturityDate,
+				narrative = "Principal return from CLI TD to CLI",
+				termDeposit = termDeposit)
+		ret.add(principalReturnPayment)
 
 		return ret
 	}
 
-	fun createTransfersForMonthlyPayment(termDeposit: TermDeposit) : List<Transfer> {
-		val ret = listOf<Transfer>()
+	private fun createTransfersForMonthlyPayment(termDeposit: TermDeposit) : List<Transfer> {
+		val ret = mutableListOf<Transfer>()
+		var date = Date(termDeposit.valueDate.time)
+
+		date = calendarService.addDays(date, 30)
+
+		while(date.before(termDeposit.maturityDate)) {
+			val transfers = createTransfers(termDeposit, 30)
+			transfers.forEach { it.date = date }
+			ret.addAll(transfers)
+			date = calendarService.addDays(date, 30)
+		}
+
+		// create final payment
+		var lastPaymentTerm =  termDeposit.term.rem(30).toLong()
+		val transfers = createTransfers(termDeposit, lastPaymentTerm)
+		transfers.forEach { it.date = termDeposit.maturityDate }
+		ret.addAll(transfers)
+
+		// Principal return from TD to CLI
+		val principalReturnPayment = Transfer(type = TransferType.principal,
+				currency = termDeposit.currency,
+				amount = termDeposit.principal,
+				date = termDeposit.maturityDate,
+				narrative = "Principal return from CLI TD to CLI",
+				termDeposit = termDeposit)
+		ret.add(principalReturnPayment)
+
 		return ret
 	}
 
@@ -126,9 +156,7 @@ class TermDepositService {
 			Otherwise use the term provided to calculate the maturity date
 		 */
 		if (request.maturity != 0L) {
-			termDeposit.maturityDate = Date()
-			termDeposit.maturityDate.time = request.maturity/1000
-
+			termDeposit.maturityDate = Date(request.maturity)
 			termDeposit.term = calendarService.diffDays(termDeposit.maturityDate, termDeposit.valueDate)
 		} else {
 			termDeposit.maturityDate = calendarService.addDays(termDeposit.valueDate, termDeposit.term)
@@ -161,16 +189,13 @@ class TermDepositService {
 		// final interest paid to client
 		termDeposit.dailyNetClientInterest = termDeposit.dailyGrossClientInterest - termDeposit.dailyWHT
 
-		val transfer = createTransferFromPrincipal(termDeposit)
-		termDeposit.transfers.add(transfer)
+		termDeposit.transfers.add(createTransferFromPrincipal(termDeposit))
 
 		// create transfers
 		if (termDeposit.paymentType == TermDepositPaymentType.atMaturity) {
-			val transactions = createTransfersForMaturityPayment(termDeposit)
-			termDeposit.transfers.addAll(transactions)
+			termDeposit.transfers.addAll(createTransfersForAtCallPayment(termDeposit))
 		} else {
-			val transactions = createTransfersForMonthlyPayment(termDeposit)
-			termDeposit.transfers.addAll(transactions)
+			termDeposit.transfers.addAll(createTransfersForMonthlyPayment(termDeposit))
 		}
 
 		termDepositRepository.save(termDeposit)

@@ -8,11 +8,11 @@ import { createStore, applyMiddleware } from 'redux'
 import thunk from 'redux-thunk'
 import {fromJS} from 'immutable'
 import { Router, Route, IndexRoute, IndexRedirect, Link, browserHistory } from 'react-router'
-import { login, logout, isLoggedIn, getAccessToken, isAdmin, handleAuthentication, refresh, setSession, hasScope } from './AuthService';
+import { populateConnectionStatus } from './AuthService';
 
 import reducer from './reducers'
 import containers from './containers'
-import {baseline} from './actions'
+import {baseline, loginImpl} from './actions'
 import { restGet, normalizeComplexResponse } from './client'
 
 /* Sets the user default home screen to the ladder screen if they're only
@@ -40,6 +40,7 @@ const initializeUI = (store) => {
 			  <Route path="customerList" component={containers.CustomerListContainer} />
 			  <Route path="customer/:id" component={containers.CustomerContainer} />
 			  <Route path="addTermDeposit/:id" component={containers.AddTermDepositContainer} />
+			  <Route path="addBulkTermDeposit/:id" component={containers.AddBulkTermDepositContainer} />
 			</Route>
 		  </Router>
 		</Provider>
@@ -48,23 +49,17 @@ const initializeUI = (store) => {
 
 let ETag = 0
 
-handleAuthentication((err) => {
-	let store = createStore(reducer, normalizeComplexResponse({customers: [], termDeposits: [], currentCustomer: {}}), applyMiddleware(thunk))
+let store = createStore(reducer, normalizeComplexResponse({customers: [], termDeposits: [], currentCustomer: {}}), applyMiddleware(thunk))
 
-	if (err) {
-		console.log("User is not logged in")
+/* Read the JWT from local storage if present and update the connectionStatus model */
+store.dispatch(loginImpl(normalizeComplexResponse(populateConnectionStatus())))
+
+if (store.getState().getIn(['connectionStatus', 'logged'])) {
+	store.dispatch(baseline()).then(() => 	{
 		initializeUI(store)
-	}
-	else {
-
-		if (isLoggedIn()) {
-			store.dispatch(baseline()).then(() => 	{
-				initializeUI(store)
-		//		setInterval(() => { store.dispatch(baseline())}, 60000)
-			})
-		} else {
-			console.log("User is not logged in")
-			initializeUI(store)
-		}
-	}
-})
+//		setInterval(() => { store.dispatch(baseline())}, 60000)
+	})
+} else {
+	console.log("User is not logged in")
+	initializeUI(store)
+}

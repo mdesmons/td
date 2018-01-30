@@ -7,7 +7,7 @@ import { Link } from 'react-router'
 
 const Toolbar = ({customers, connectionStatus, onLogin, onLogout}) => {
 	if (connectionStatus.get('logged')) {
-		if (connectionStatus.get('desk')) {
+		if (connectionStatus.get('scope') === 'desk') {
 			return (<div>
 			<AdminToolbar onLogout={onLogout} customers={customers}/>
 			<TopBanner message={"Admin console"} />
