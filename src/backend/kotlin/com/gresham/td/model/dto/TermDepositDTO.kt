@@ -17,5 +17,6 @@ class TermDepositDTO(termDeposit: TermDeposit) {
 	val closingDate = termDeposit.closingDate
 	val paymentType = termDeposit.paymentType
 	val status = termDeposit.status
+	val reasonForClose = termDeposit.reasonForClose
 	val transfers = termDeposit.transfers.map { TransferDTO(it) }
 }

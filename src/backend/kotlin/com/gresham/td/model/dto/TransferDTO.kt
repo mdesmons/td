@@ -9,4 +9,5 @@ class TransferDTO(transfer: Transfer) {
 	val amount = transfer.amount
 	val date = transfer.date
 	val narrative = transfer.narrative
+	val status = transfer.status
 }

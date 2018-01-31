@@ -74,7 +74,7 @@ class AddBulkTermDeposit extends React.Component {
 		<div className="row">
 			<div className="col-md-1"></div>
 			<div className="col-md-10">
-				<div className="bg-light rounded p-3">
+				<div className="bg-light rounded p-3 mt-1">
 					<h1 className="display-4">Term Deposits</h1>
 					<table className="table table-striped">
 						<thead>

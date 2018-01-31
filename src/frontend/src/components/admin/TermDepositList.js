@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { accountTypeForDisplay } from '../../constants'
+import { accountTypeForDisplay, accountStatusForDisplay } from '../../constants'
 var ImmutablePropTypes = require('react-immutable-proptypes');
 
 const TermDepositItem = ({termDeposit, onClick}) => (
@@ -9,14 +9,60 @@ const TermDepositItem = ({termDeposit, onClick}) => (
 		<td>{(new Date(termDeposit.get('valueDate'))).toLocaleString().substr(0, 10)}</td>
 		<td>{termDeposit.get('principal').amount()}</td>
 		<td>{termDeposit.get('interest') + '%'}</td>
-		<td>{termDeposit.get('term') + ' days'}</td>
 		<td>{(new Date(termDeposit.get('maturityDate'))).toLocaleString().substr(0, 10)}</td>
 		<td>{accountTypeForDisplay[termDeposit.get('paymentType')]}</td>
+		<td>{accountStatusForDisplay[termDeposit.get('status')]}</td>
 		</tr>
 )
 
+class TermDepositList extends React.Component {
+  constructor(props) {
+	super(props)
+	this.state = {
+		asc: true,
+		sortField: 'valueDate'
+	}
 
-const TermDepositList = ({termDeposits, onTermDepositSelected}) => (
+	this.data = Array.from(this.props.termDeposits)
+    this.getTDList = this.getTDList.bind(this);
+    this.swapOrder = this.swapOrder.bind(this);
+    this.onHeaderClick = this.onHeaderClick.bind(this);
+  }
+
+	onHeaderClick(field) {
+		if (this.state.sortField == field) {
+			this.swapOrder()
+		} else {
+			this.setState({sortField: field})
+			this.forceUpdate()
+		}
+	}
+
+	swapOrder() {
+		this.setState({asc : !this.state.asc})
+		this.forceUpdate()
+	}
+
+	getTDList() {
+		var self = this
+		if (this.state.asc) {
+			return this.data.sort(function(a, b) {
+				if (a.get(self.state.sortField) == b.get(self.state.sortField)) return 0
+				if (a.get(self.state.sortField) < b.get(self.state.sortField)) return 1
+				if (a.get(self.state.sortField) > b.get(self.state.sortField)) return -1
+				})
+		} else {
+			return this.data.sort(function(a, b) {
+				if (a.get(self.state.sortField) == b.get(self.state.sortField)) return 0
+				if (a.get(self.state.sortField) > b.get(self.state.sortField)) return 1
+				if (a.get(self.state.sortField) < b.get(self.state.sortField)) return -1
+				})
+		}
+	}
+
+
+  render() {
+	return (
 	<div className="container-fluid">
 		<div className="row">
 			<div className="col-md-1"></div>
@@ -27,23 +73,25 @@ const TermDepositList = ({termDeposits, onTermDepositSelected}) => (
 						<thead>
 							<tr>
 								<th scope="col">Source Account</th>
-								<th scope="col">Value Date</th>
-								<th scope="col">Principal</th>
-								<th scope="col">Interest Rate</th>
-								<th scope="col">Term</th>
-								<th scope="col">Maturity</th>
+								<th scope="col" onClick = {() => this.onHeaderClick('valueDate')}>Open Date</th>
+								<th scope="col" onClick = {() => this.onHeaderClick('principal')}>Principal</th>
+								<th scope="col">Int. Rate</th>
+								<th scope="col" onClick = {() => this.onHeaderClick('maturityDate')}>Maturity</th>
 								<th scope="col">Type</th>
+								<th scope="col">Status</th>
 							</tr>
 						</thead>
 						<tbody>
-							{termDeposits.map(td => <TermDepositItem key={td.get('id')} termDeposit={td} onClick={() => onTermDepositSelected(td.get('id'))} />)}
+							{this.getTDList().map(td => <TermDepositItem key={td.get('id')} termDeposit={td} onClick={() => this.props.onTermDepositSelected(td.get('id'))} />)}
 						</tbody>
 					</table>
 				</div>
 			</div>
 		</div>
 	</div>
-)
+	)
+	}
+}
 
 
 

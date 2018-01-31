@@ -3,11 +3,12 @@ import { signalError, clearError, closeTermDeposit } from '../actions'
 import {fromJS} from 'immutable'
 import TermDeposit from '../components/admin/TermDeposit'
 import { browserHistory } from 'react-router'
+import {transferStatus } from '../constants'
 
 const mapStateToProps = (state, ownProps) => {
 	let termDeposit = state.getIn(['termDeposits', ownProps.params.id])
 	let transferIds = termDeposit.get('transfers')
-	let transfers = transferIds.map(id => state.getIn(['transfers', String(id)]))
+	let transfers = transferIds.map(id => state.getIn(['transfers', String(id)])).filter(it => it.get('status') == transferStatus.active)
 	console.log(transfers.toJS())
 
 	let r= {

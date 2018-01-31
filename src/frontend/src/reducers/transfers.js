@@ -10,6 +10,9 @@ const transfers = (state = initialTransfers, action) => {
 		return state.merge(action.data.get('transfers'))
 	case 'SET_CURRENT_CUSTOMER':
 		return action.data.get("transfers") || state
+   case 'CLOSE_TERM_DEPOSIT':
+		// when a TD is closed, its transactions are marked as Canceled
+		return state.merge(action.data.get('transfers'))
 	case 'LOGOUT':
 		return state.clear()
     default:

@@ -20,6 +20,16 @@ enum class TransferType {
 	}
 }
 
+enum class TransferStatus {
+	active,
+	cancelled;
+
+	@JsonValue
+	fun toValue(): Int {
+		return ordinal
+	}
+}
+
 
 @Entity
 class Transfer(
@@ -32,6 +42,7 @@ class Transfer(
 		var amount: Double = 0.0,
 		var date: Date = Date(0),
 		var narrative: String = "",
+		var status: TransferStatus = TransferStatus.active,
 
 		@ManyToOne(fetch = FetchType.EAGER)
 		@JoinColumn(name = "term_deposit_id")

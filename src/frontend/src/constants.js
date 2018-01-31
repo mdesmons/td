@@ -1,6 +1,17 @@
 export const accountTypeForDisplay = {
 	0: "At Call",
-	1: "Monthly interest payment"
+	1: "Monthly payment"
+}
+
+export const accountStatusForDisplay = {
+	0: "Active",
+	1: "Pending close"
+}
+
+
+export const transferStatus = {
+	active: 0,
+	cancelled: 1
 }
 
 String.prototype.asPhone = function(str){
