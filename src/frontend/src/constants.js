@@ -8,10 +8,15 @@ export const accountStatusForDisplay = {
 	1: "Pending close"
 }
 
+export const accountStatus = {
+	active: 0,
+	cancelled: 1
+}
 
 export const transferStatus = {
 	active: 0,
-	cancelled: 1
+	pendingClose: 1,
+	closed: 2
 }
 
 String.prototype.asPhone = function(str){

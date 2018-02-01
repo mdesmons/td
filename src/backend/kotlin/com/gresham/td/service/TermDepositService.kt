@@ -76,11 +76,12 @@ class TermDepositService {
 		return ret
 	}
 
-	private fun createTransfersForPrincipalReturn(termDeposit: TermDeposit): Transfer {
+	private fun createTransfersForPrincipalReturn(termDeposit: TermDeposit, date:Date? = null): Transfer {
+		val closeDate = date?:termDeposit.maturityDate
 		val principalReturnPayment = Transfer(type = TransferType.principalReturn,
 				currency = termDeposit.currency,
 				amount = termDeposit.principal,
-				date = termDeposit.maturityDate,
+				date = closeDate,
 				narrative = "Principal return from CLI TD to CLI",
 				termDeposit = termDeposit)
 		return principalReturnPayment
@@ -220,7 +221,7 @@ class TermDepositService {
 		 */
 		if (request.reason in listOf(TermDepositCloseReason.financialHardship, TermDepositCloseReason.system)) {
 			termDeposit.transfers.filter { it.type != TransferType.principal }.forEach { it.status = TransferStatus.cancelled }
-			termDeposit.transfers.add(createTransfersForPrincipalReturn(termDeposit))
+			termDeposit.transfers.add(createTransfersForPrincipalReturn(termDeposit, Date()))
 
 			// the principal is returned, and we'll receive confirmation in the next day BTR, then only can we close the TD
 			termDeposit.closingDate = calendarService.nextBusinessDay(Date())
@@ -236,7 +237,7 @@ class TermDepositService {
 			} else {
 				// TODO create last payment, with interest penalty
 				termDeposit.transfers.forEach { it.status = TransferStatus.cancelled }
-				termDeposit.transfers.add(createTransfersForPrincipalReturn(termDeposit))
+				termDeposit.transfers.add(createTransfersForPrincipalReturn(termDeposit, endOfNoticePeriod))
 
 				// the principal is returned, and we'll receive confirmation in the next day BTR, then only can we close the TD
 				termDeposit.closingDate = calendarService.nextBusinessDay(endOfNoticePeriod)

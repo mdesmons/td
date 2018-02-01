@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router'
-import { accountTypeForDisplay } from '../../constants'
+import { accountTypeForDisplay, transferStatus } from '../../constants'
 var ImmutablePropTypes = require('react-immutable-proptypes');
 
 const TransferItem = ({transfer}) => (
@@ -53,9 +53,9 @@ const TermDeposit = ({onClose, onNoticePeriodClose, onHardshipClose, termDeposit
 			<div className="col bg-light rounded p-3 mt-1"><h2>Actions</h2>
 				<form>
 				  <div className="form-group">
-					<button type="button" className="btn mr-3" onClick={()=>onClose()}>Close Term Deposit</button>
-					<button type="button" className="btn mr-3" onClick={()=>onNoticePeriodClose()}>Notice Period Close Term Deposit</button>
-					<button type="button" className="btn mr-3" onClick={()=>onHardshipClose()}>Hardship Close Term Deposit</button>
+					<button type="button" className="btn mr-3" onClick={()=>onClose()} disabled={termDeposit.get('status')!=transferStatus.active}>Close Term Deposit</button>
+					<button type="button" className="btn mr-3" onClick={()=>onNoticePeriodClose()} disabled={termDeposit.get('status')!=transferStatus.active}>Notice Period Close Term Deposit</button>
+					<button type="button" className="btn mr-3" onClick={()=>onHardshipClose()} disabled={termDeposit.get('status')!=transferStatus.active}>Hardship Close Term Deposit</button>
 					</div>
 				</form>
 			</div>

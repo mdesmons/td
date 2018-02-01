@@ -27,6 +27,7 @@ class TermDepositList extends React.Component {
     this.getTDList = this.getTDList.bind(this);
     this.swapOrder = this.swapOrder.bind(this);
     this.onHeaderClick = this.onHeaderClick.bind(this);
+    this.sortIcon = this.sortIcon.bind(this);
   }
 
 	onHeaderClick(field) {
@@ -43,19 +44,32 @@ class TermDepositList extends React.Component {
 		this.forceUpdate()
 	}
 
+	sortIcon(field) {
+		if (field == this.state.sortField) {
+			if (this.state.asc) {
+				return "fa fa-sort-up"
+			} else {
+				return "fa fa-sort-down"
+			}
+		} else {
+			return "fa fa-sort"
+		}
+	}
+
+
 	getTDList() {
 		var self = this
 		if (this.state.asc) {
 			return this.data.sort(function(a, b) {
 				if (a.get(self.state.sortField) == b.get(self.state.sortField)) return 0
-				if (a.get(self.state.sortField) < b.get(self.state.sortField)) return 1
-				if (a.get(self.state.sortField) > b.get(self.state.sortField)) return -1
+				if (a.get(self.state.sortField) < b.get(self.state.sortField)) return -1
+				if (a.get(self.state.sortField) > b.get(self.state.sortField)) return 1
 				})
 		} else {
 			return this.data.sort(function(a, b) {
 				if (a.get(self.state.sortField) == b.get(self.state.sortField)) return 0
-				if (a.get(self.state.sortField) > b.get(self.state.sortField)) return 1
-				if (a.get(self.state.sortField) < b.get(self.state.sortField)) return -1
+				if (a.get(self.state.sortField) > b.get(self.state.sortField)) return -1
+				if (a.get(self.state.sortField) < b.get(self.state.sortField)) return 1
 				})
 		}
 	}
@@ -73,10 +87,10 @@ class TermDepositList extends React.Component {
 						<thead>
 							<tr>
 								<th scope="col">Source Account</th>
-								<th scope="col" onClick = {() => this.onHeaderClick('valueDate')}>Open Date</th>
-								<th scope="col" onClick = {() => this.onHeaderClick('principal')}>Principal</th>
+								<th scope="col" onClick = {() => this.onHeaderClick('valueDate')}>Open Date&nbsp;<i className={this.sortIcon('valueDate')} aria-hidden="true"></i> </th>
+								<th scope="col" onClick = {() => this.onHeaderClick('principal')}>Principal&nbsp;<i className={this.sortIcon('principal')} aria-hidden="true"></i> </th>
 								<th scope="col">Int. Rate</th>
-								<th scope="col" onClick = {() => this.onHeaderClick('maturityDate')}>Maturity</th>
+								<th scope="col" onClick = {() => this.onHeaderClick('maturityDate')}>Maturity&nbsp;<i className={this.sortIcon('maturityDate')} aria-hidden="true"></i> </th>
 								<th scope="col">Type</th>
 								<th scope="col">Status</th>
 							</tr>
