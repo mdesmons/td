@@ -56,40 +56,29 @@ export function restDelete(url, payload) {
 }
 
 export function normalizeComplexResponse(originalData) {
-	// Define the schema
+	console.log("Original data: ")
+	console.log(originalData)
+
+		// Define the schema
 	const transferSchema = new schema.Entity('transfers');
 	const transferListSchema = new schema.Array(transferSchema);
 	const termDepositSchema = new schema.Entity('termDeposits', {transfers: transferListSchema});
 	const termDepositListSchema = new schema.Array(termDepositSchema);
+	const clientAccountSchema = new schema.Entity('clientAccounts', {clientAccounts: clientAccountListSchema});
+	const clientAccountListSchema = new schema.Array(clientAccountSchema);
 
-	const customerSchema = new schema.Entity('customers', {termDeposits: termDepositListSchema}, {idAttribute: "locationCode"});
+	const customerSchema = new schema.Entity('customers', {termDeposits: termDepositListSchema, clientAccounts: clientAccountListSchema}, {idAttribute: "locationCode"});
 	const customerListSchema = new schema.Array(customerSchema);
+
 	const interestRateSchema = new schema.Entity('interestRate');
 
 	const errorSchema = new schema.Entity('error');
 	const connectionStatusSchema = new schema.Entity('connectionStatus');
 
-/*
-	if (originalData.subscriptions != undefined) {
-		originalData.subscriptions.forEach(s =>
-		{
-			s.ladderId = String(s.ladderId)
-			s.playerId = String(s.playerId)
-		})
-	}
-
-	if (originalData.matches != undefined) {
-		originalData.matches.forEach(s =>
-		{
-			s.winnerId = String(s.winnerId)
-			s.loserId = String(s.loserId)
-			s.ladderId = String(s.ladderId)
-		})
-	}
-*/
 
 	const modelSchema = {
 		customers: [customerSchema],
+		clientAccounts: [clientAccountSchema],
 		transfers: [transferSchema],
 		termDeposits: [termDepositSchema],
 		interestRate: [interestRateSchema]
@@ -97,8 +86,7 @@ export function normalizeComplexResponse(originalData) {
 
 	let normalizedModel = normalize(originalData, modelSchema).entities;
 
-	console.log("Original data: ")
-	console.log(originalData)
+
 
 	console.log("Normalised data: ")
 	console.log(normalizedModel)
@@ -111,6 +99,7 @@ export function normalizeComplexResponse(originalData) {
 	if (!model.has('customers')) { model = model.set('customers', Map())}
 	if (!model.has('termDeposits')) { model = model.set('termDeposits', Map())}
 	if (!model.has('transfers')) { model = model.set('transfers', Map())}
+	if (!model.has('clientAccounts')) { model = model.set('clientAccounts', Map())}
 
 	return model
 }

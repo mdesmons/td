@@ -7,13 +7,9 @@ import { browserHistory } from 'react-router'
 const mapStateToProps = (state, ownProps) => {
 	let customer = state.getIn(['customers', ownProps.params.id])
 	let accounts
-	if ((state.get('accounts') == undefined) || (state.get('accounts').size() == 0)) {
-		accounts = fromJS([{id: '001', description: "Account001"},
-		{id: '002', description: "Account002"}]).toList()
-		//accounts = List()
-	} else {
-		accounts = state.get('accounts').toList()
-	}
+	console.log(state.get('clientAccounts').toJS())
+	accounts = state.get('clientAccounts').toList()
+
 	let r= {
 		customer,
 		accounts,

@@ -55,6 +55,19 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
+	<!--	<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+			<version>1.4.194</version>
+		</dependency>-->
 
 		<dependency>
 			<groupId>com.auth0</groupId>
@@ -75,6 +88,11 @@
 			<version>0.9.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.nimbusds</groupId>
+			<artifactId>nimbus-jose-jwt</artifactId>
+			<version>5.4</version>
+		</dependency>
 		<!--
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -109,6 +127,14 @@
 			<artifactId>httpcore</artifactId>
 			<version>4.4.8</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.5</version>
+		</dependency>
+
 
 		<!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/sqljdbc4 -->
 		<dependency>
@@ -177,37 +203,23 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-test-junit</artifactId>
+			<version>${kotlin.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 
-		<sourceDirectory>${project.basedir}/kotlin</sourceDirectory>
+		<sourceDirectory>main</sourceDirectory>
 		<resources>
 		<resource>
 			<directory>${project.basedir}/resources</directory>
 		</resource>
 		</resources>
-		<plugins>
-			<plugin>
-				<groupId>org.jvnet.jaxb2.maven2</groupId>
-				<artifactId>maven-jaxb2-plugin</artifactId>
-				<version>0.13.1</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<schemaDirectory>resources/wsdl</schemaDirectory>
-					<schemaLanguage>WSDL</schemaLanguage>
-					<schemaIncludes>
-						<schemaInclude>*.xml</schemaInclude>
-					</schemaIncludes>
-					<generatePackage>cashfac.wsdl</generatePackage>
-				</configuration>
-			</plugin>
+	<plugins>
 			<plugin>
 				<artifactId>kotlin-maven-plugin</artifactId>
 				<groupId>org.jetbrains.kotlin</groupId>

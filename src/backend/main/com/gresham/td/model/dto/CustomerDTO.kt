@@ -17,4 +17,5 @@ class CustomerDTO(customer: Customer) {
 	val cacheTDAccount = customer.cacheTDAccount
 	val monthlyInterestAllowed  = customer.monthlyInterestAllowed
 	val termDeposits = customer.termDeposits.filter { it.status != TermDepositStatus.closed }.map { TermDepositDTO(it) }
+	val clientAccounts = customer.clientAccounts.map { ClientAccountDTO(it) }
 }

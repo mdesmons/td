@@ -2,7 +2,7 @@ import React from 'react'
 import Alert from '../Alert'
 
 const Account = ({id, name}) => (
-	<option value={id}>{name}</option>
+	<option value={id}>{id + " " + name}</option>
 )
 
 class AddTermDeposit extends React.Component {
@@ -167,7 +167,7 @@ class AddTermDeposit extends React.Component {
 						<div className="form-group">
 							<label htmlFor="sourceAccount">Source Client Account</label>
 							<select className="form-control" id="sourceAccount"  onChange={this.onSourceAccountChange} value= {this.state.sourceAccount}>
-							{this.props.accounts.map(account => <Account key={account.get('id')} id={account.get('id')} name={account.get('description')}  />)}
+							{this.props.accounts.map(account => <Account key={account.get('id')} id={account.get('id')} name={account.get('name')}  />)}
 							</select>
 						</div>
 

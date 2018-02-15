@@ -18,6 +18,9 @@ class Customer (
 		var cacheTDAccount: String = "",
 		var monthlyInterestAllowed : Boolean = false,
 
+		@Transient
+		var clientAccounts : MutableList<ClientAccount> = mutableListOf(),
+
 		// a customer has several TDs
 		@OneToMany(mappedBy = "customer", cascade = arrayOf(CascadeType.ALL), fetch = FetchType.EAGER)
 		var termDeposits: MutableSet<TermDeposit> = mutableSetOf<TermDeposit>()
