@@ -29,8 +29,8 @@ class CustomerControllerV1() {
 
 	/* Get the list of onboarded customers */
 	@GetMapping("/")
-	fun customers(): Map<String, List<CustomerShortDTO>>
-		= hashMapOf("customers" to customerService.customerList())
+	fun customers(principal: Principal?): Map<String, List<CustomerShortDTO>>
+		= hashMapOf("customers" to customerService.customerList(principal))
 
 	/* onboard a new customer */
 	@PostMapping("/")

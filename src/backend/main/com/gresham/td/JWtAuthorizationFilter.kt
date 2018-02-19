@@ -14,6 +14,7 @@ import javax.servlet.FilterChain
 import javax.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import javax.servlet.http.HttpServletRequest
 
@@ -41,14 +42,14 @@ class JWTAuthorizationFilter(authManager: AuthenticationManager) : BasicAuthenti
 		val token = request.getHeader(HEADER_STRING)
 		if (token != null) {
 			// parse the token.
-			val user = Jwts.parser()
+			val body = Jwts.parser()
 					.setSigningKey(SECRET.toByteArray())
 					.parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
-					.getBody()
-					.getSubject()
-
+					.body
+			val user = body.subject
+			val scope = body["scope"] as String
 			return if (user != null) {
-				UsernamePasswordAuthenticationToken(user, null, mutableListOf<GrantedAuthority>())
+				UsernamePasswordAuthenticationToken(user, null, mutableListOf<GrantedAuthority>(SimpleGrantedAuthority(scope)))
 			} else null
 		}
 		return null

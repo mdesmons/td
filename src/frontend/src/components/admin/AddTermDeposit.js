@@ -16,6 +16,7 @@ class AddTermDeposit extends React.Component {
 			termDays: "",
 			termMonths: "",
 			sourceAccount: props.accounts.first().get('id'),
+			bankBalance: props.accounts.first().get('bankBalance'),
 			maturityDate: "",
 			overrideRate : false
 		}
@@ -30,6 +31,8 @@ class AddTermDeposit extends React.Component {
     this.onMaturityDateChange = this.onMaturityDateChange.bind(this);
     this.onOverrideRateChange = this.onOverrideRateChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+
+
   }
 
 
@@ -118,6 +121,11 @@ class AddTermDeposit extends React.Component {
 
 	onSourceAccountChange(event) {
 		this.setState({sourceAccount : event.target.value})
+		this.props.onQueryAccountBalance(event.target.value)
+	}
+
+	componentDidMount() {
+		this.props.onQueryAccountBalance(this.state.sourceAccount)
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -172,8 +180,8 @@ class AddTermDeposit extends React.Component {
 						</div>
 
 						<div className="form-group">
-							<label htmlFor="principal">Principal</label>
-							<input type="number" step="0.01" className="form-control" id="principal" placeholder="Please enter a principal amount" value= {this.state.principal} onChange={this.onPrincipalChange} required/>
+							<label htmlFor="principal">Principal (account current balance: <span>{this.props.accounts.find(a => a.get('id') == this.state.sourceAccount).get('bankBalance').amount()}</span>)</label>
+							<input type="number" step="0.01" max={this.props.accounts.find(a => a.get('id') == this.state.sourceAccount).get('bankBalance')} className="form-control" id="principal" placeholder="Please enter a principal amount" value= {this.state.principal} onChange={this.onPrincipalChange} required/>
 							<div className="invalid-feedback">
 								 Please enter a valid amount. Must be positive and less than the account balance
 							</div>

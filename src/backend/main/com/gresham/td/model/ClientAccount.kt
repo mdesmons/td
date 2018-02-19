@@ -1,5 +1,7 @@
 package com.gresham.td.model
 
+import com.gresham.td.api.dto.AccountBalanceResponse
+import java.util.*
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Id
@@ -20,4 +22,26 @@ class ClientAccount() {
 
 	@Column(name="CLICRC")
 	var currency: String = ""
+
+	@Transient
+	var bankBalance: Double = 0.0
+	@Transient
+	var bankBalanceDate: Date = Date()
+	@Transient
+	var forwardBalance: Double = 0.0
+	@Transient
+	var forwardBalanceDate: Date = Date()
+	@Transient
+	var ledgerBalance: Double = 0.0
+	@Transient
+	var ledgerBalanceDate: Date = Date()
+
+	fun setBalances(balance: AccountBalanceResponse) {
+		bankBalance= balance.bankBalance
+		bankBalanceDate= balance.bankBalanceDate
+		forwardBalance= balance.forwardBalance
+		forwardBalanceDate= balance.forwardBalanceDate
+		ledgerBalance= balance.ledgerBalance
+		ledgerBalanceDate= balance.ledgerBalanceDate
+	}
 }

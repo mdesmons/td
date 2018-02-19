@@ -117,6 +117,20 @@ export const closeTermDeposit = (id, request) => {
 	}
 }
 
+const clientAccountDetailsImpl = (data) => {
+  return {
+    type: 'CLIENT_ACCOUNT_DETAILS',
+    data
+  }
+}
+
+export const clientAccountDetails = (id) => {
+	return function (dispatch) {
+		return restGet('/api/v1/clientaccount/' + id + '/')
+			.done((data) => { dispatch(clientAccountDetailsImpl(normalizeComplexResponse(data)))})
+			.fail((data) => { dispatch(signalError(normalizeComplexResponse(data.responseJSON)))})
+	}
+}
 
 function baselineImpl(data)  {
 	return {

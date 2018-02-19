@@ -18,6 +18,11 @@ class Customer (
 		var cacheTDAccount: String = "",
 		var monthlyInterestAllowed : Boolean = false,
 
+		// stuff for VBT API comms management
+		var certificate: String = "",
+		var keystorePass: String = "",
+		var keyAlias: String = "",
+
 		@Transient
 		var clientAccounts : MutableList<ClientAccount> = mutableListOf(),
 

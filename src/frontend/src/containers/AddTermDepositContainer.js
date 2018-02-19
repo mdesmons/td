@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
 import AddTermDeposit from '../components/admin/AddTermDeposit'
-import { addTermDeposit, clearError, calculateInterest, signalError } from '../actions'
+import { addTermDeposit, clearError, calculateInterest, clientAccountDetails, signalError } from '../actions'
 import {fromJS, List, Map} from 'immutable'
 import { browserHistory } from 'react-router'
 
@@ -30,6 +30,9 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 		},
 		onRecalculateInterest: (data) => {
 			dispatch(calculateInterest(ownProps.params.id, data))
+		},
+		onQueryAccountBalance: (accountId) => {
+			dispatch(clientAccountDetails(accountId))
 		},
 		onClearError: () => {
 			dispatch(clearError())

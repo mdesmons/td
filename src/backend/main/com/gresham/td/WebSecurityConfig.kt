@@ -1,6 +1,7 @@
 package com.gresham.td
 
 import com.gresham.td.SecurityConstants.SIGN_UP_URL
+import com.gresham.td.model.UserCategory
 import com.gresham.td.persistence.CustomerRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
@@ -33,14 +34,15 @@ open class WebSecurity(val userDetailsService: UserDetailsService, val bCryptPas
 				.antMatchers(HttpMethod.POST, SIGN_UP_URL).permitAll()
 	//			.antMatchers("/resources/**", "/").permitAll()
 				.antMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+						.antMatchers("/api/admin**").hasAuthority(UserCategory.desk.toString())
+						.antMatchers("/api/**").hasAnyAuthority(UserCategory.customer.toString(), UserCategory.desk.toString())
 						.anyRequest().authenticated()
 						.and()
 						.addFilter(JWTAuthenticationFilter(authenticationManager()))
 						.addFilter(JWTAuthorizationFilter(authenticationManager()))
 						.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 						.and()
-//				.antMatchers("/api/admin**").hasAuthority("admin")
-//				.antMatchers("/api/**").hasAuthority("standard")
+//
 //				antMatchers("/**").permitAll()
 		http.headers().cacheControl().disable();
 
