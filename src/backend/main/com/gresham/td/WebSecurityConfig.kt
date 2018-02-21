@@ -30,7 +30,7 @@ open class WebSecurity(val userDetailsService: UserDetailsService, val bCryptPas
 	@Autowired
 	lateinit var authManager: AuthenticationManager
 
-	@Value("\${jwt_expiration_time_in_seconds}")
+	@Value("\${jwt.expiration-time}")
 	private var expirationTime: Int = 0
 
 	@Throws(Exception::class)

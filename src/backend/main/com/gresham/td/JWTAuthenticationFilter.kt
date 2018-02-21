@@ -52,6 +52,9 @@ class JWTAuthenticationFilter(private val authManager: AuthenticationManager, pr
 										   res: HttpServletResponse,
 										   chain: FilterChain,
 										   auth: Authentication) {
+		/* once the user successfully authenticated, create a JWT and send it back in the response.
+		   This JWT must be sent with each API query
+		 */
 		val username = (auth.principal as User).username
 		val scopes = (auth.principal as User).authorities.joinToString { it.authority }
 		val claimsSet = JWTClaimsSet.Builder()
@@ -65,8 +68,6 @@ class JWTAuthenticationFilter(private val authManager: AuthenticationManager, pr
 		)
 		val signer = MACSigner(SECRET)
 		token.sign(signer)
-		token.serialize()
-
 		res.addHeader(HEADER_STRING, TOKEN_PREFIX + token.serialize())
 	}
 }

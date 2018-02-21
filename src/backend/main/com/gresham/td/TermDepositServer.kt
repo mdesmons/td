@@ -4,13 +4,15 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.EnableAsync
+import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 
 @SpringBootApplication
 @EnableAsync
+@EnableScheduling
 
-open class KotlinSpringBootApplication {
+open class TermDepositServer {
 	@Bean
 	fun bCryptPasswordEncoder() : BCryptPasswordEncoder {
 		return BCryptPasswordEncoder()
@@ -18,9 +20,5 @@ open class KotlinSpringBootApplication {
 }
 
 fun main(args: Array<String>) {
-
-
-
-
-	SpringApplication.run(KotlinSpringBootApplication::class.java, *args)
+	SpringApplication.run(TermDepositServer::class.java, *args)
 }

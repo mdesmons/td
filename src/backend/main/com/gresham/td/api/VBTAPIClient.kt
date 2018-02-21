@@ -34,10 +34,10 @@ class VBTAPIClient() : APIClient {
 	@Autowired
 	lateinit var clientAccountRepository: ClientAccountRepository
 
-	@Value("\${api_base_uri}")
+	@Value("\${api.base-uri}")
 	private val apiBase: String? = null
 
-	@Value("\${certroot}")
+	@Value("\${api.certificates-folder}")
 	private val certRoot: String? = null
 
 	private var cryptoManager: CustomerCryptoManager? = null

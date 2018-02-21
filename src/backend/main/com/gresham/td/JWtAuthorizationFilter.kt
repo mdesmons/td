@@ -27,44 +27,37 @@ class JWTAuthorizationFilter(authManager: AuthenticationManager) : BasicAuthenti
 								   res: HttpServletResponse,
 								   chain: FilterChain) {
 		val header = req.getHeader(HEADER_STRING)
-
 		if (header == null || !header.startsWith(TOKEN_PREFIX)) {
 			chain.doFilter(req, res)
 			return
 		} else {
-				val authentication = getAuthentication(req)
-
+				val authentication = getAuthentication(header.replace(TOKEN_PREFIX, ""))
 				SecurityContextHolder.getContext().authentication = authentication
 				chain.doFilter(req, res)
 		}
 	}
 
-	private fun getAuthentication(request: HttpServletRequest): UsernamePasswordAuthenticationToken? {
-		val token = request.getHeader(HEADER_STRING)
-		if (token != null) {
-			val verifier = MACVerifier(SECRET)
-			val parsedToken = SignedJWT.parse(token.replace(TOKEN_PREFIX, ""))
-			if (!parsedToken.verify(verifier)) {
-				logger.error("JWT signature verification failed")
-				return null;
-			}
-
-			val claimsSet = parsedToken.jwtClaimsSet
-			val now = Date()
-			if (claimsSet.expirationTime.before(now)) {
-				val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-				logger.error("JWT expired. Expiration time: " + sdf.format(claimsSet.expirationTime))
-				return null
-			}
-
-			val user = claimsSet.subject
-			val scope = claimsSet.getStringClaim("scope")
-			return if (user != null) {
-				UsernamePasswordAuthenticationToken(user, null, mutableListOf<GrantedAuthority>(SimpleGrantedAuthority(scope)))
-			} else null
-		} else {
-			logger.error("Request does not contain any " + HEADER_STRING + " header")
+	private fun getAuthentication(token: String): UsernamePasswordAuthenticationToken? {
+		/* Parse the JWT and verify the signature to make sure it wasn't tampered with */
+		val parsedToken = SignedJWT.parse(token)
+		val verifier = MACVerifier(SECRET)
+		if (!parsedToken.verify(verifier)) {
+			logger.error("JWT signature verification failed")
+			return null;
 		}
-		return null
+
+		/* Check that the token hasn't expired */
+		val claimsSet = parsedToken.jwtClaimsSet
+		if (claimsSet.expirationTime.before(Date())) {
+			val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+			logger.error("JWT expired. Expiration time: " + sdf.format(claimsSet.expirationTime))
+			return null
+		}
+
+		val user = claimsSet.subject
+		val scope = claimsSet.getStringClaim("scope")
+		return if (user != null) {
+			UsernamePasswordAuthenticationToken(user, null, mutableListOf<GrantedAuthority>(SimpleGrantedAuthority(scope)))
+		} else null
 	}
 }
