@@ -18,4 +18,9 @@ class UserDetailsServiceImpl(private val applicationUserRepository: ApplicationU
 		val applicationUser = applicationUserRepository.findByUsername(username) ?: throw UsernameNotFoundException(username)
 		return User(applicationUser.username, applicationUser.password, mutableListOf<GrantedAuthority>(SimpleGrantedAuthority(applicationUser.type.toString())))
 	}
+
+	fun canAccessLocation(username: String, location: String) : Boolean {
+		val applicationUser = applicationUserRepository.findByUsername(username) ?: throw UsernameNotFoundException(username)
+		return (applicationUser.locationCodes=="*"|| applicationUser.locationCodes.split(",").contains(location))
+	}
 }

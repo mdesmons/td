@@ -38,6 +38,7 @@ class DevAPIClient : APIClient {
 		TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 	}
 
-	override fun setCustomer(customer: Customer) {
+	override fun setCustomer(customer: Customer) : APIClient {
+		return this
 	}
 }

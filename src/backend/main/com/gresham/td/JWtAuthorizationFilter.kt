@@ -3,10 +3,9 @@ package com.gresham.td
 import com.gresham.td.SecurityConstants.HEADER_STRING
 import com.gresham.td.SecurityConstants.SECRET
 import com.gresham.td.SecurityConstants.TOKEN_PREFIX
-import java.util.ArrayList
+import com.nimbusds.jose.crypto.MACVerifier
+import com.nimbusds.jwt.SignedJWT
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import io.jsonwebtoken.Jwts
-import org.apache.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import javax.servlet.ServletException
 import java.io.IOException
@@ -16,6 +15,8 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.servlet.http.HttpServletRequest
 
 
@@ -41,16 +42,28 @@ class JWTAuthorizationFilter(authManager: AuthenticationManager) : BasicAuthenti
 	private fun getAuthentication(request: HttpServletRequest): UsernamePasswordAuthenticationToken? {
 		val token = request.getHeader(HEADER_STRING)
 		if (token != null) {
-			// parse the token.
-			val body = Jwts.parser()
-					.setSigningKey(SECRET.toByteArray())
-					.parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
-					.body
-			val user = body.subject
-			val scope = body["scope"] as String
+			val verifier = MACVerifier(SECRET)
+			val parsedToken = SignedJWT.parse(token.replace(TOKEN_PREFIX, ""))
+			if (!parsedToken.verify(verifier)) {
+				logger.error("JWT signature verification failed")
+				return null;
+			}
+
+			val claimsSet = parsedToken.jwtClaimsSet
+			val now = Date()
+			if (claimsSet.expirationTime.before(now)) {
+				val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+				logger.error("JWT expired. Expiration time: " + sdf.format(claimsSet.expirationTime))
+				return null
+			}
+
+			val user = claimsSet.subject
+			val scope = claimsSet.getStringClaim("scope")
 			return if (user != null) {
 				UsernamePasswordAuthenticationToken(user, null, mutableListOf<GrantedAuthority>(SimpleGrantedAuthority(scope)))
 			} else null
+		} else {
+			logger.error("Request does not contain any " + HEADER_STRING + " header")
 		}
 		return null
 	}

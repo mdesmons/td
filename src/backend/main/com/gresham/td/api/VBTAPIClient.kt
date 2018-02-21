@@ -48,9 +48,10 @@ class VBTAPIClient() : APIClient {
 		val encryptedPayload = payload
 	}
 
-	override fun setCustomer(customer: Customer) {
+	override fun setCustomer(customer: Customer) : APIClient {
 		cryptoManager = CustomerCryptoManager(certRoot + File.separator + customer.certificate, customer.keystorePass, customer.keyAlias)
 		locationCode = customer.locationCode
+		return this
 	}
 
 	/* Actually reading the account list from the DB, which is faster and there's no API currently supporting that anyway */
@@ -61,7 +62,7 @@ class VBTAPIClient() : APIClient {
 	override fun accountBalance(accountHolderRef: String, currency: String, accountType: String): AccountBalanceResponse {
 		val request = AccountBalanceRequest(accountHolderRef, currency, accountType)
 		val response = post("balances/enquiry", request)
-		val sr = IOUtils.toString(response?.entity?.content)
+		val sr = IOUtils.toString(response?.entity?.content, "UTF-8")
 		val balance: AccountBalanceResponse = decryptPayload(sr)
 		return balance
 	}

@@ -12,9 +12,13 @@ class InterestService {
 	@Autowired
 	lateinit var calendarService: CalendarService
 
+	@Autowired
+	lateinit var userDetailsService: UserDetailsServiceImpl
+
 	private val logger = LoggerFactory.getLogger(InterestService::class.java)
 
-	fun getRate(locationCode: String, term: Int, principal: Double, paymentType: TermDepositPaymentType): RateDTO {
+	fun getRate(username: String, locationCode: String, term: Int, principal: Double, paymentType: TermDepositPaymentType): RateDTO {
+		userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
 		/* some bogus formula here: 0.1% per slice of 10k principal, 0.1% per month term, penalty for monthly interest */
 		var rate = 0.001 * (principal / 10000).toInt() + 0.001 * (term / 30)
 		if (paymentType == TermDepositPaymentType.monthly) {
@@ -26,7 +30,8 @@ class InterestService {
 		return RateDTO(value = rate)
 	}
 
-	fun getRate(locationCode: String, openingDate: Date, maturity: Date, principal: Double, paymentType: TermDepositPaymentType): RateDTO {
+	fun getRate(username: String, locationCode: String, openingDate: Date, maturity: Date, principal: Double, paymentType: TermDepositPaymentType): RateDTO {
+		userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
 		var valueDate = openingDate
 
 		if (!calendarService.isBusinessDay(openingDate)) {
@@ -34,7 +39,7 @@ class InterestService {
 		}
 
 		val term = calendarService.diffDays(maturity, valueDate)
-		return getRate(locationCode,  term, principal, paymentType)
+		return getRate(username, locationCode,  term, principal, paymentType)
 	}
 
 }

@@ -3,15 +3,19 @@ package com.gresham.td.service
 import com.gresham.td.api.APIClient
 import com.gresham.td.api.VBTAPIClient
 import com.gresham.td.api.CustomerCryptoManager
+import com.gresham.td.model.ApplicationUser
 import com.gresham.td.model.dto.ClientAccountDTO
 import com.gresham.td.model.dto.CustomerDTO
 import com.gresham.td.model.dto.CustomerRequestDTO
 import com.gresham.td.model.dto.CustomerShortDTO
+import com.gresham.td.persistence.ApplicationUserRepository
 import com.gresham.td.persistence.ClientAccountRepository
 import com.gresham.td.persistence.CustomerRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.PathVariable
 import java.io.File
@@ -30,36 +34,56 @@ class CustomerService() {
 	@Autowired
 	lateinit var clientAccountRepository: ClientAccountRepository
 
-	fun customerList(principal: Principal?): List<CustomerShortDTO> {
-		return customerRepository.findAll().map { CustomerShortDTO(it) }
+	@Autowired
+	lateinit var userDetailsService: UserDetailsServiceImpl
+
+	@Autowired
+	lateinit var applicationUserRepository: ApplicationUserRepository
+
+	/* Return the list of customers that the user has access to */
+	fun customerList(username: String): List<CustomerShortDTO> {
+		val applicationUser = applicationUserRepository.findByUsername(username) ?: throw IllegalArgumentException("Permission error")
+
+		if (applicationUser.locationCodes == "*") {
+			return customerRepository.findAll().map { CustomerShortDTO(it) }
+		} else {
+			val locationCodes = applicationUser.locationCodes.split(",")
+			return customerRepository.findAll().filter{locationCodes.contains(it.locationCode)}.map { CustomerShortDTO(it) }
+		}
 	}
 
-	fun customer(locationCode: String): CustomerDTO {
-		val customer = customerRepository.findByLocationCode(locationCode)
+	/* Get the details of a customer */
+	fun customer(username: String, locationCode: String): CustomerDTO {
+		userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
+		val customer = customerRepository.findByLocationCode(locationCode) ?: throw IllegalArgumentException("Customer not found")
 		val accountList = clientAccountRepository.clientAccounts(locationCode, "CLI")
 		customer.clientAccounts.addAll(accountList)
 		return CustomerDTO(customer)
 	}
 
-	/* Return the list of ladders with their subscriptions */
-	fun addCustomer(request: CustomerRequestDTO): CustomerDTO {
+	/* Onboard a new customer */
+	fun addCustomer(username: String, request: CustomerRequestDTO): CustomerDTO {
 		val customer = request.toCustomer()
+		userDetailsService.canAccessLocation(username, customer.locationCode) || throw IllegalArgumentException("Permission error")
+
+		// verify the customer doesn't exist yet
+		val existingCustomer = customerRepository.findByLocationCode(customer.locationCode)
+		if (existingCustomer != null) throw IllegalArgumentException("Customer already exists")
+
 		customerRepository.save(customer)
 		return CustomerDTO(customer)
 	}
 
-	fun clientAccountDetails(principal: Principal?, @PathVariable id: String) : ClientAccountDTO {
-		val account = clientAccountRepository.findById(id)
-		if (account != null) {
-			// get the account balance
+	fun clientAccountDetails(username: String, @PathVariable id: String) : ClientAccountDTO {
+		// get the account location
+		val locationCode = id.substring(0, 6)
+		userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
+		val account = clientAccountRepository.findById(id) ?: throw IllegalArgumentException("Account not found")
+		val customer = customerRepository.findByLocationCode(locationCode) ?: throw IllegalArgumentException("Customer not found")
 
-			// get the account location
-			val locationCode = account.id.substring(0, 6)
-			val customer = customerRepository.findByLocationCode(locationCode)
-			apiClient.setCustomer(customer)
-			account.setBalances(apiClient.accountBalance(account.id, account.currency, account.type))
-			return ClientAccountDTO(account)
-		}
-		throw IllegalArgumentException("Invalid parameters: account not found")
+		// get the account balance
+		account.setBalances(apiClient.setCustomer(customer).accountBalance(account.id, account.currency, account.type))
+
+		return ClientAccountDTO(account)
 	}
 }

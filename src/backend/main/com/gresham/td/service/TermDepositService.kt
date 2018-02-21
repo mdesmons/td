@@ -8,9 +8,7 @@ import com.gresham.td.model.dto.TermDepositDTO
 import com.gresham.td.model.dto.TermDepositRequestDTO
 import com.gresham.td.persistence.CustomerRepository
 import com.gresham.td.persistence.TermDepositRepository
-import com.gresham.td.persistence.TransferRepository
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import java.security.Principal
 import java.util.*
 
 @Service
@@ -34,13 +32,12 @@ class TermDepositService {
 	lateinit var calendarService: CalendarService
 
 	private fun createTransferFromPrincipal(termDeposit: TermDeposit): Transfer {
-		val ret = Transfer(type = TransferType.principal,
+		return Transfer(type = TransferType.principal,
 				currency = termDeposit.currency,
 				amount = termDeposit.principal,
 				date = Date(),
 				narrative = "Principal transfer",
 				termDeposit = termDeposit)
-		return ret
 	}
 
 
@@ -78,13 +75,12 @@ class TermDepositService {
 
 	private fun createTransfersForPrincipalReturn(termDeposit: TermDeposit, date:Date? = null): Transfer {
 		val closeDate = date?:termDeposit.maturityDate
-		val principalReturnPayment = Transfer(type = TransferType.principalReturn,
+		return Transfer(type = TransferType.principalReturn,
 				currency = termDeposit.currency,
 				amount = termDeposit.principal,
 				date = closeDate,
 				narrative = "Principal return from CLI TD to CLI",
 				termDeposit = termDeposit)
-		return principalReturnPayment
 	}
 
 	private fun createTransfersForAtCallPayment(termDeposit: TermDeposit): List<Transfer> {
@@ -115,7 +111,7 @@ class TermDepositService {
 		}
 
 		// create final payment
-		var lastPaymentTerm = termDeposit.term.rem(30).toLong()
+		val lastPaymentTerm = termDeposit.term.rem(30).toLong()
 		val transfers = createTransfers(termDeposit, lastPaymentTerm)
 		transfers.forEach { it.date = termDeposit.maturityDate }
 		ret.addAll(transfers)
@@ -126,15 +122,12 @@ class TermDepositService {
 		return ret
 	}
 
-	// TODO check the user has access to the location code
-	fun addTermDeposit(principal: Principal?, locationCode: String, request: TermDepositRequestDTO): TermDepositDTO {
-		if (principal == null) {
-			throw SecurityException("Unknown user")
-		}
+	fun addTermDeposit(username: String, locationCode: String, request: TermDepositRequestDTO): TermDepositDTO {
+		// check the user has access to the location code
+		userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
+		val customer = customerRepository.findByLocationCode(locationCode) ?: throw IllegalArgumentException("Customer not found")
 
-		val user = userDetailsService.loadUserByUsername(principal.name)
-
-		val customer = customerRepository.findByLocationCode(locationCode)
+		val user = userDetailsService.loadUserByUsername(username)
 		val termDeposit = request.toTermDeposit()
 		termDeposit.customer = customer
 
@@ -158,9 +151,9 @@ class TermDepositService {
 
 		if (request.interest == 0.0) {
 			// calculate interest
-			termDeposit.interest = interestService.getRate(locationCode, termDeposit.term, termDeposit.principal, termDeposit.paymentType).value
+			termDeposit.interest = interestService.getRate(username, locationCode, termDeposit.term, termDeposit.principal, termDeposit.paymentType).value
 		} else {
-			if (user.authorities.contains(SimpleGrantedAuthority("desk"))) {
+			if (user.authorities.contains(SimpleGrantedAuthority(UserCategory.desk.toString()))) {
 				termDeposit.interest = request.interest
 			} else {
 				throw SecurityException("Only desk users can specify an interest rate")
@@ -199,17 +192,14 @@ class TermDepositService {
 		return TermDepositDTO(termDeposit)
 	}
 
-	// TODO check the user has access to the location code
-	fun closeTermDeposit(principal: Principal?, id: Long, request: CloseTermDepositRequestDTO): TermDepositDTO {
-		var termDeposit = termDepositRepository.findOne(id)
-		if (termDeposit == null) {
-			// error
-		}
+	fun closeTermDeposit(username: String, id: Long, request: CloseTermDepositRequestDTO): TermDepositDTO {
+		var termDeposit = termDepositRepository.findOne(id) ?: throw IllegalArgumentException("Unknown term deposit")
 
 		if (termDeposit.status != TermDepositStatus.opened) {
-			// error
+			throw IllegalStateException("TD is not open")
 
 		}
+		userDetailsService.canAccessLocation(username, termDeposit.customer.locationCode) || throw IllegalArgumentException("Permission error")
 
 		// financial hardship: nuke pending transactions, reimburse principal
 		// system: nuke pending transactions, reimburse principal
@@ -254,11 +244,12 @@ class TermDepositService {
 
 	// TODO check credentials
 	/* Close all TDs that are marked as PendingClose, and whose close date is today or before */
-	fun closePendingTermDeposits(principal: Principal?): List<TermDepositDTO> {
+	fun closePendingTermDeposits(username: String?): List<TermDepositDTO> {
+	//	userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
 		var tomorrow = Date()
 		tomorrow = calendarService.addDays(tomorrow, 1)
 
-		var termDeposits = termDepositRepository.findByStatus(TermDepositStatus.pendingClosed).filter { it.closingDate.before(tomorrow) }
+		val termDeposits = termDepositRepository.findByStatus(TermDepositStatus.pendingClosed).filter { it.closingDate.before(tomorrow) }
 		termDeposits.forEach { it.status = TermDepositStatus.closed }
 		termDepositRepository.save(termDeposits)
 		return termDeposits.map { TermDepositDTO(it) }

@@ -12,20 +12,22 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import javax.servlet.http.HttpServletRequest
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.security.core.userdetails.User
 import java.util.*
 
-import com.gresham.td.SecurityConstants.EXPIRATION_TIME
 import com.gresham.td.SecurityConstants.HEADER_STRING
 import com.gresham.td.SecurityConstants.SECRET
 import com.gresham.td.SecurityConstants.TOKEN_PREFIX
-import io.jsonwebtoken.Claims
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.JWSHeader
+import com.nimbusds.jose.crypto.MACSigner
+import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.SignedJWT
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-class JWTAuthenticationFilter(private val authManager: AuthenticationManager) : UsernamePasswordAuthenticationFilter() {
+class JWTAuthenticationFilter(private val authManager: AuthenticationManager, private val expirationTime: Int = 86400) : UsernamePasswordAuthenticationFilter() {
+
 
 	@Throws(AuthenticationException::class)
 	override fun attemptAuthentication(req: HttpServletRequest,
@@ -52,12 +54,19 @@ class JWTAuthenticationFilter(private val authManager: AuthenticationManager) : 
 										   auth: Authentication) {
 		val username = (auth.principal as User).username
 		val scopes = (auth.principal as User).authorities.joinToString { it.authority }
-		val token = Jwts.builder()
-				.setClaims(hashMapOf<String, Any>("scope" to scopes))
-				.setSubject(username)
-				.setExpiration(Date(System.currentTimeMillis() + EXPIRATION_TIME))
-				.signWith(SignatureAlgorithm.HS512, SECRET.toByteArray())
-				.compact()
-		res.addHeader(HEADER_STRING, TOKEN_PREFIX + token)
+		val claimsSet = JWTClaimsSet.Builder()
+				.subject(username)
+				.expirationTime(Date(System.currentTimeMillis() + expirationTime * 1000))
+				.claim("scope", scopes).build()
+
+		val token = SignedJWT(
+				JWSHeader.Builder(JWSAlgorithm.HS512).build(),
+				claimsSet
+		)
+		val signer = MACSigner(SECRET)
+		token.sign(signer)
+		token.serialize()
+
+		res.addHeader(HEADER_STRING, TOKEN_PREFIX + token.serialize())
 	}
 }

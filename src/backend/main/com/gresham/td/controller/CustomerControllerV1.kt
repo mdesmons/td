@@ -15,7 +15,7 @@ import java.util.*
 
 @RestController
 @RequestMapping("/api/v1/customer")
-class CustomerControllerV1() {
+class CustomerControllerV1 {
 	private val logger = LoggerFactory.getLogger(CustomerControllerV1::class.java)
 
 	@Autowired
@@ -29,41 +29,72 @@ class CustomerControllerV1() {
 
 	/* Get the list of onboarded customers */
 	@GetMapping("/")
-	fun customers(principal: Principal?): Map<String, List<CustomerShortDTO>>
-		= hashMapOf("customers" to customerService.customerList(principal))
+	fun customers(principal: Principal?): Map<String, List<CustomerShortDTO>> {
+		if (principal != null) {
+			return hashMapOf("customers" to customerService.customerList(principal.name))
+		}
+		throw IllegalArgumentException("Unknown user")
+	}
 
 	/* onboard a new customer */
 	@PostMapping("/")
-	fun addCustomer(@RequestBody customer: CustomerRequestDTO): Map<String, List<CustomerDTO>>
-			= hashMapOf("customers" to listOf<CustomerDTO>(customerService.addCustomer(customer)))
+	fun addCustomer(principal: Principal?, @RequestBody customer: CustomerRequestDTO): Map<String, List<CustomerDTO>> {
+
+		if (principal != null) {
+			return hashMapOf("customers" to listOf<CustomerDTO>(customerService.addCustomer(principal.name, customer)))
+		}
+
+		throw IllegalArgumentException("Unknown user")
+	}
 
 	/* Get a customer details */
 	@GetMapping("/{location_code}/")
-	fun customer(@PathVariable location_code: String): Map<String, List<CustomerDTO>>
-			= hashMapOf("customers" to listOf(customerService.customer(location_code)))
+	fun customer(principal: Principal?, @PathVariable location_code: String): Map<String, List<CustomerDTO>> {
+		if (principal != null) {
+			return hashMapOf("customers" to listOf(customerService.customer(principal.name, location_code)))
+		}
+		throw IllegalArgumentException("Unknown user")
+	}
 
 	// create a TD for a customer
 	@PostMapping("/{location_code}/td/")
 	fun addTermDeposit(principal: Principal?, @PathVariable location_code: String, @RequestBody request: List<TermDepositRequestDTO>) : Map<String, List<TermDepositDTO>> {
-		var response = request.map { termDepositService.addTermDeposit(principal, location_code, it) }
-		return hashMapOf("termDeposits" to response)
-	}
-
-	@PutMapping("/{location_code}/rate/")
-	fun rate(@PathVariable location_code: String, @RequestBody request: RateRequestDTO): Map<String, List<RateDTO>> {
-		if (request.term != 0) {
-			return hashMapOf("interestRate" to listOf(rateService.getRate(location_code, request.term, request.principal, request.paymentType)))
-		} else {
-			val maturityDate = Date()
-			maturityDate.time = request.maturity
-			return hashMapOf("interestRate" to listOf(rateService.getRate(location_code, Date(), maturityDate, request.principal, request.paymentType)))
+		if (principal != null) {
+			val response = request.map { termDepositService.addTermDeposit(principal.name, location_code, it) }
+			return hashMapOf("termDeposits" to response)
 		}
+		throw IllegalArgumentException("Unknown user")
 	}
 
-	protected fun formatError(error: String?) = hashMapOf<String, ErrorDTO>("error" to ErrorDTO(error?:"Unknown error"))
+	// get the interest rate for a TD
+	@PutMapping("/{location_code}/rate/")
+	fun rate(principal: Principal?, @PathVariable location_code: String, @RequestBody request: RateRequestDTO): Map<String, List<RateDTO>> {
+		if (principal != null) {
+			if (request.term != 0) {
+				return hashMapOf("interestRate" to listOf(rateService.getRate(
+						principal.name,
+						location_code,
+						request.term,
+						request.principal,
+						request.paymentType
+				)))
+			} else {
+				val maturityDate = Date()
+				maturityDate.time = request.maturity
+				return hashMapOf("interestRate" to listOf(rateService.getRate(
+						principal.name,
+						location_code,
+						Date(),
+						maturityDate,
+						request.principal,
+						request.paymentType
+				)))
+			}
+		}
+		throw IllegalArgumentException("Unknown user")
+	}
 
-	@ExceptionHandler(IllegalStateException::class)
-	protected fun handleIllegalState(ex: IllegalStateException, request: WebRequest) = ResponseEntity.status(HttpStatus.FORBIDDEN).body(formatError("Invalid user status"))
+	protected fun formatError(error: String?) = hashMapOf("error" to ErrorDTO(error?:"Unknown error"))
 
 	@ExceptionHandler(IllegalArgumentException::class)
 	protected fun handleIllegalArgument(ex: IllegalArgumentException, request: WebRequest) = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(formatError(ex.message))

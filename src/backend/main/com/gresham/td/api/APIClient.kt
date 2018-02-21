@@ -20,5 +20,5 @@ interface APIClient {
 	//TODO
 	fun closeAccount(accountHolderRef: String)
 
-	fun setCustomer(customer: Customer)
+	fun setCustomer(customer: Customer) : APIClient
 }
