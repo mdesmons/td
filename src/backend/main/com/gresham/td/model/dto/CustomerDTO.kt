@@ -16,7 +16,7 @@ class CustomerDTO(customer: Customer) {
 	val haircutAccount = customer.haircutAccount
 	val cacheTDAccount = customer.cacheTDAccount
 	val monthlyInterestAllowed  = customer.monthlyInterestAllowed
-	val termDeposits = customer.termDeposits.filter { it.status != TermDepositStatus.closed }.map { TermDepositDTO(it) }
+	val termDeposits = customer.termDeposits.filter { it.status != TermDepositStatus.Closed }.map { TermDepositDTO(it) }
 	val clientAccounts = customer.clientAccounts.map { ClientAccountDTO(it) }
 	val certificate = customer.certificate
 	val keyAlias = customer.keyAlias

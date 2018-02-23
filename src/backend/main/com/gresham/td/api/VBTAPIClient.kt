@@ -30,7 +30,7 @@ import java.net.URI
 @Component
 @Configuration
 @Profile("!dev")
-class VBTAPIClient() : APIClient {
+class VBTAPIClient : APIClient {
 	@Autowired
 	lateinit var clientAccountRepository: ClientAccountRepository
 
@@ -63,14 +63,13 @@ class VBTAPIClient() : APIClient {
 		val request = AccountBalanceRequest(accountHolderRef, currency, accountType)
 		val response = post("balances/enquiry", request)
 		val sr = IOUtils.toString(response?.entity?.content, "UTF-8")
-		val balance: AccountBalanceResponse = decryptPayload(sr)
-		return balance
+		return decryptPayload(sr)
 	}
 
 	//TODO
 	// Creates a term deposit account
 	override fun createAccount(accountHolderRef: String, description: String, currency: String, type: String ):ClientAccount {
-		val clientAccount: ClientAccount = ClientAccount()
+		val clientAccount = ClientAccount()
 		clientAccount.id = accountHolderRef
 		clientAccount.currency = currency
 		clientAccount.name = description
@@ -90,7 +89,7 @@ class VBTAPIClient() : APIClient {
 
 	private fun <T> encryptPayload(payload: T) : String {
 		val rsaKey = cryptoManager?.RSAkey()
-		val mapper = ObjectMapper();
+		val mapper = ObjectMapper()
 		val jsonString = mapper.writeValueAsString(payload)
 
 		val signer = RSASSASigner(rsaKey)
@@ -129,8 +128,7 @@ class VBTAPIClient() : APIClient {
 		//TODO check the signature
 		signedJWT.payload
 
-		val result: T = mapper.readValue(signedJWT.payload.toString(), T::class.java)
-		return result
+		return mapper.readValue(signedJWT.payload.toString(), T::class.java)
 	}
 
 	fun post(resource: String, payload: Any) : CloseableHttpResponse? {

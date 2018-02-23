@@ -16,14 +16,13 @@ import org.springframework.scheduling.annotation.Scheduled
 import java.io.File
 import java.io.FileReader
 import java.text.DecimalFormat
-import java.text.NumberFormat
 
 class Rate(var amountMin: Double = 0.0,
 		   var amountMax: Double = Double.MAX_VALUE,
 		   var termMin: Int = 0,
 		   var termMax: Int = Int.MAX_VALUE,
 		   val rate: Double,
-		   var type: TermDepositPaymentType = TermDepositPaymentType.atMaturity) {
+		   var type: TermDepositPaymentType = TermDepositPaymentType.AtMaturity) {
 
 	override fun toString(): String {
 		val amtFormat = DecimalFormat("#,###.00")
@@ -73,6 +72,7 @@ class InterestService : InitializingBean {
 	@Scheduled(cron = "\${rate-file.schedule}")
 	private fun loadRateFile() {
 		logger.info("Loading interest rate file")
+		rates.clear()
 		val reader = FileReader(rateFileFolder + File.separator + "rates.csv")
 		val records = CSVFormat.EXCEL.withFirstRecordAsHeader().parse(reader)
 		for (record in records) {
@@ -82,12 +82,12 @@ class InterestService : InitializingBean {
 			if (record["termMin"].isNotBlank()) { rate.termMin = record["termMin"].toInt()}
 			if (record["termMax"].isNotBlank()) { rate.termMax = record["termMax"].toInt()}
 			when (record["type"].toUpperCase()) {
-				"ATCALL","AT-CALL","AT CALL" -> rate.type = TermDepositPaymentType.atMaturity
-				"MONTHLY" -> rate.type = TermDepositPaymentType.monthly
+				"ATCALL","AT-CALL","AT CALL" -> rate.type = TermDepositPaymentType.AtMaturity
+				"MONTHLY" -> rate.type = TermDepositPaymentType.Monthly
 			}
 
 			rates.put(record["locationCode"], rate)
-			logger.info("Location="+ if (record["locationCode"].isEmpty()) {"DEFAULT"} else {record["locationCode"]} + ": " + rate.toString())
+			logger.debug("Location="+ if (record["locationCode"].isEmpty()) {"DEFAULT"} else {record["locationCode"]} + ": " + rate.toString())
 		}
 	}
 

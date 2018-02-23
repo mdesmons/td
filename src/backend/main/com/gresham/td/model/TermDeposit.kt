@@ -5,38 +5,32 @@ import javax.persistence.*
 import com.fasterxml.jackson.annotation.JsonValue
 
 enum class TermDepositStatus {
-	opened,
-	pendingClosed,
-	closed;
+	Opened,
+	PendingClosed,
+	Closed;
 
 	@JsonValue
-	fun toValue(): Int {
-		return ordinal
-	}
+	fun toValue() = ordinal
 }
 
 enum class TermDepositCloseReason {
-	none,
-	maturityReached,
-	noticePeriod,
-	financialHardship,
-	system;
+	None,
+	MaturityReached,
+	NoticePeriod,
+	FinancialHardship,
+	System;
 
 
 	@JsonValue
-	fun toValue(): Int {
-		return ordinal
-	}
+	fun toValue() = ordinal
 }
 
 enum class TermDepositPaymentType {
-	atMaturity,
-	monthly;
+	AtMaturity,
+	Monthly;
 
 	@JsonValue
-	fun toValue(): Int {
-		return ordinal
-	}
+	fun toValue() = ordinal
 }
 
 @Entity
@@ -49,7 +43,7 @@ class TermDeposit(
 		@JoinColumn(name = "location_code")
 		var customer: Customer = Customer(),
 
-		var paymentType: TermDepositPaymentType = TermDepositPaymentType.atMaturity,
+		var paymentType: TermDepositPaymentType = TermDepositPaymentType.AtMaturity,
 		var account: String = "",
 		var currency: String = "AUD",
 		var sourceAccount: String = "",
@@ -60,19 +54,19 @@ class TermDeposit(
 		var openingDate: Date = Date(),
 		var valueDate: Date = Date(0),   // date the TD starts accrue interest
 		var maturityDate: Date = Date(0),
-		var status: TermDepositStatus = TermDepositStatus.opened,
+		var status: TermDepositStatus = TermDepositStatus.Opened,
 		var dailyGrossCustomerInterest: Double = 0.0,
 		var dailyHaircut: Double = 0.0,
 		var dailyGrossClientInterest: Double = 0.0,
 		var dailyWHT: Double = 0.0,
 		var dailyNetClientInterest: Double = 0.0,
-		var reasonForClose: TermDepositCloseReason = TermDepositCloseReason.none,
+		var reasonForClose: TermDepositCloseReason = TermDepositCloseReason.None,
 		var closingDate: Date = Date(0),  // date at which the principal is returned  (could be a WE)
-		var VBTClosingDate: Date = Date(0), /* date at which we instruct VBT to close the account.
+		var technicalClosingDate: Date = Date(0), /* date at which we instruct VBT to close the account.
 		This is when the payment of the Principal gets returned in the BTR */
 
 
 		// a TD has several transfers
 		@OneToMany(mappedBy = "termDeposit", cascade = arrayOf(CascadeType.ALL), fetch = FetchType.EAGER)
-		var transfers: MutableList<Transfer> = mutableListOf<Transfer>()
+		var transfers: MutableList<Transfer> = mutableListOf()
 )

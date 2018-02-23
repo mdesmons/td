@@ -8,8 +8,12 @@ import com.gresham.td.model.dto.TermDepositDTO
 import com.gresham.td.model.dto.TermDepositRequestDTO
 import com.gresham.td.persistence.CustomerRepository
 import com.gresham.td.persistence.TermDepositRepository
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import java.io.*
 import java.util.*
+
 
 @Service
 class TermDepositService {
@@ -30,6 +34,9 @@ class TermDepositService {
 
 	@Autowired
 	lateinit var calendarService: CalendarService
+
+	@Value("\${td.cache.notify.folder}")
+	private val cacheOutputDir: String? = ""
 
 	private fun createTransferFromPrincipal(termDeposit: TermDeposit): Transfer {
 		return Transfer(type = TransferType.principal,
@@ -179,7 +186,7 @@ class TermDepositService {
 		termDeposit.transfers.add(createTransferFromPrincipal(termDeposit))
 
 		// create transfers
-		if (termDeposit.paymentType == TermDepositPaymentType.atMaturity) {
+		if (termDeposit.paymentType == TermDepositPaymentType.AtMaturity) {
 			termDeposit.transfers.addAll(createTransfersForAtCallPayment(termDeposit))
 		} else {
 			termDeposit.transfers.addAll(createTransfersForMonthlyPayment(termDeposit))
@@ -193,9 +200,9 @@ class TermDepositService {
 	}
 
 	fun closeTermDeposit(username: String, id: Long, request: CloseTermDepositRequestDTO): TermDepositDTO {
-		var termDeposit = termDepositRepository.findOne(id) ?: throw IllegalArgumentException("Unknown term deposit")
+		val termDeposit = termDepositRepository.findOne(id) ?: throw IllegalArgumentException("Unknown term deposit")
 
-		if (termDeposit.status != TermDepositStatus.opened) {
+		if (termDeposit.status != TermDepositStatus.Opened) {
 			throw IllegalStateException("TD is not open")
 
 		}
@@ -209,16 +216,16 @@ class TermDepositService {
 		// TODO: Make sure no interest was paid
 		/* TODO : Check dates. If closing on a non business day, the principal return will be on the next business day, and the closing date will then be next-next-business day
 		 */
-		if (request.reason in listOf(TermDepositCloseReason.financialHardship, TermDepositCloseReason.system)) {
+		if (request.reason in listOf(TermDepositCloseReason.FinancialHardship, TermDepositCloseReason.System)) {
 			termDeposit.transfers.filter { it.type != TransferType.principal }.forEach { it.status = TransferStatus.cancelled }
 			termDeposit.transfers.add(createTransfersForPrincipalReturn(termDeposit, Date()))
 
 			// the principal is returned, and we'll receive confirmation in the next day BTR, then only can we close the TD
 			termDeposit.closingDate = calendarService.nextBusinessDay(Date())
 			termDeposit.reasonForClose = request.reason
-			termDeposit.status = TermDepositStatus.pendingClosed
+			termDeposit.status = TermDepositStatus.PendingClosed
 			termDepositRepository.save(termDeposit)
-		} else if (request.reason == TermDepositCloseReason.noticePeriod) {
+		} else if (request.reason == TermDepositCloseReason.NoticePeriod) {
 			// check the end of notice period is not post maturity
 			var endOfNoticePeriod = Date()
 			endOfNoticePeriod = calendarService.addDays(endOfNoticePeriod, 31)
@@ -232,7 +239,7 @@ class TermDepositService {
 				// the principal is returned, and we'll receive confirmation in the next day BTR, then only can we close the TD
 				termDeposit.closingDate = calendarService.nextBusinessDay(endOfNoticePeriod)
 				termDeposit.reasonForClose = request.reason
-				termDeposit.status = TermDepositStatus.pendingClosed
+				termDeposit.status = TermDepositStatus.PendingClosed
 				termDepositRepository.save(termDeposit)
 			}
 		} else {
@@ -242,16 +249,57 @@ class TermDepositService {
 		return TermDepositDTO(termDeposit)
 	}
 
-	// TODO check credentials
-	/* Close all TDs that are marked as PendingClose, and whose close date is today or before */
-	fun closePendingTermDeposits(username: String?): List<TermDepositDTO> {
-	//	userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
+	/* Close all TDs that are marked as PendingClose, and whose close date is today or before (aka technical close) */
+	@Scheduled(cron = "\${td.close.schedule}")
+	fun closePendingTermDepositsImpl(): List<TermDepositDTO> {
 		var tomorrow = Date()
 		tomorrow = calendarService.addDays(tomorrow, 1)
 
-		val termDeposits = termDepositRepository.findByStatus(TermDepositStatus.pendingClosed).filter { it.closingDate.before(tomorrow) }
-		termDeposits.forEach { it.status = TermDepositStatus.closed }
+		val termDeposits = termDepositRepository.findByStatus(TermDepositStatus.PendingClosed).filter { it.technicalClosingDate.before(tomorrow) }
+		termDeposits.forEach { it.status = TermDepositStatus.Closed }
 		termDepositRepository.save(termDeposits)
 		return termDeposits.map { TermDepositDTO(it) }
+	}
+
+	/* Close all TDs that are marked as PendingClose, and whose close date is today or before */
+	fun closePendingTermDeposits(username: String): List<TermDepositDTO> {
+		userDetailsService.hasAuthority(username, UserCategory.managedServices)  || throw IllegalArgumentException("Permission error")
+		return closePendingTermDepositsImpl()
+	}
+
+	@Scheduled(cron = "\${td.mature.schedule}")
+	fun matureTermDepositsImpl(): List<TermDepositDTO> {
+		var tomorrow = Date()
+		tomorrow = calendarService.addDays(tomorrow, 1)
+
+		val termDeposits = termDepositRepository.findByStatus(TermDepositStatus.Opened).filter { it.maturityDate.before(tomorrow) }
+		termDeposits.forEach { it.status = TermDepositStatus.PendingClosed }
+		termDepositRepository.save(termDeposits)
+		return termDeposits.map { TermDepositDTO(it) }
+	}
+
+	/* Mature all TDs */
+	fun matureTermDeposits(username: String): List<TermDepositDTO> {
+		userDetailsService.hasAuthority(username, UserCategory.managedServices)  || throw IllegalArgumentException("Permission error")
+		return matureTermDepositsImpl()
+	}
+
+	// notify CACHE of the accrued interest
+	@Scheduled(cron = "\${td.cache.notify.schedule}")
+	fun notifyCacheImpl(): Map<String, Double> {
+		val now = Date()
+		val termDepositsGroupedByCustomer = termDepositRepository.findByStatus(TermDepositStatus.Opened).groupBy { it.customer.locationCode }
+		val amounts = termDepositsGroupedByCustomer.mapValues{ entry -> entry.value.sumByDouble { it.principal * it.interest *  calendarService.diffDays(now, it.valueDate) / 100.00 }  }
+
+		val bw = BufferedWriter(FileWriter(cacheOutputDir + File.separator + "cache.csv"))
+		amounts.forEach { locationCode, value -> bw.write(locationCode + "," + value.toString()); bw.newLine() }
+		bw.close()
+
+		return amounts
+	}
+
+	fun notifyCache(username: String): Map<String, Double>  {
+		userDetailsService.hasAuthority(username, UserCategory.managedServices)  || throw IllegalArgumentException("Permission error")
+		return notifyCacheImpl()
 	}
 }

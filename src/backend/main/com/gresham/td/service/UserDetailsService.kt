@@ -1,5 +1,6 @@
 package com.gresham.td.service
 
+import com.gresham.td.model.UserCategory
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.core.userdetails.UserDetails
 import com.gresham.td.persistence.ApplicationUserRepository
@@ -22,5 +23,10 @@ class UserDetailsServiceImpl(private val applicationUserRepository: ApplicationU
 	fun canAccessLocation(username: String, location: String) : Boolean {
 		val applicationUser = applicationUserRepository.findByUsername(username) ?: throw UsernameNotFoundException(username)
 		return (applicationUser.locationCodes=="*"|| applicationUser.locationCodes.split(",").contains(location))
+	}
+
+	fun hasAuthority(username: String, category: UserCategory) : Boolean {
+		val applicationUser = applicationUserRepository.findByUsername(username) ?: throw UsernameNotFoundException(username)
+		return applicationUser.type == category
 	}
 }

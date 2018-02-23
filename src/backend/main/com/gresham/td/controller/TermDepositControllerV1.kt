@@ -17,7 +17,7 @@ class TermDepositControllerV1() {
 	@DeleteMapping("/{id}/")
 	fun closeTermDeposit(principal: Principal?, @PathVariable id: Long, @RequestBody request: CloseTermDepositRequestDTO): Map<String, List<TermDepositDTO>> {
 		if (principal != null) {
-			return hashMapOf("termDeposits" to listOf<TermDepositDTO>(termDepositService.closeTermDeposit(principal.name, id, request)))
+			return hashMapOf("termDeposits" to listOf(termDepositService.closeTermDeposit(principal.name, id, request)))
 		}
 		throw IllegalArgumentException("Unknown user")
 	}
@@ -30,4 +30,23 @@ class TermDepositControllerV1() {
 		}
 		throw IllegalArgumentException("Unknown user")
 	}
+
+	// mature all TDs whose time has come
+	@PostMapping("/mature/")
+	fun matureTermDeposits(principal: Principal?): Map<String, List<TermDepositDTO>> {
+		if (principal != null) {
+			return hashMapOf("termDeposits" to termDepositService.matureTermDeposits(principal.name))
+		}
+		throw IllegalArgumentException("Unknown user")
+	}
+
+	@PostMapping("/notifycache/")
+	fun notifyCache(principal: Principal?): Map<String, Map<String, Double>> {
+		if (principal != null) {
+			return hashMapOf("accruedInterest" to termDepositService.notifyCache(principal.name))
+		}
+		throw IllegalArgumentException("Unknown user")
+	}
+
+
 }

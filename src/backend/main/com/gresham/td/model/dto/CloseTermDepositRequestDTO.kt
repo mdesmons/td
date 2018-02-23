@@ -4,5 +4,5 @@ import com.gresham.td.model.TermDepositCloseReason
 
 
 class CloseTermDepositRequestDTO(
-		val reason: TermDepositCloseReason = TermDepositCloseReason.none
+		val reason: TermDepositCloseReason = TermDepositCloseReason.None
 )

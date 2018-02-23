@@ -1,0 +1,47 @@
+Client triggered closure
+------------------------
+
+Day 1
+user wants to close TD
+mark TD as Pending Close
+return principal
+set TD Close Date as Day 2
+
+Day 2
+ask Cache to pay interest
+Cache pays interest
+Transfer interest to CLI
+
+Day 3
+Close account in VBT
+
+
+
+Maturity closure
+----------------
+
+Day 1
+Cache pays interest (part of BAU)
+Transfer interest to CLI
+return principal
+
+mark TD as Pending Close
+set TD Close Date as Day 1
+
+Day 2
+Close account in VBT
+
+Notice period closure
+---------------------
+Day 1
+Client requests closure
+
+Day 31
+Cache pays interest (part of BAU)
+Transfer interest to CLI
+return principal
+mark TD as Pending Close
+set TD Close Date as Day 1
+
+Day 32
+Close account in VBT
