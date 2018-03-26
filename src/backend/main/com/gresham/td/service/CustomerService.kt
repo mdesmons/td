@@ -40,10 +40,17 @@ class CustomerService() {
 	@Autowired
 	lateinit var applicationUserRepository: ApplicationUserRepository
 
-	/* Return the list of customers that the user has access to */
+	/**
+	 * Gets the list of location codes a user has access to
+	 *
+	 * @param username the user login
+	 * @return a list of static customer details
+	 */
 	fun customerList(username: String): List<CustomerShortDTO> {
+		/* Check the user exists */
 		val applicationUser = applicationUserRepository.findByUsername(username) ?: throw IllegalArgumentException("Permission error")
 
+		/* If the user has access to all location codes, return everything */
 		if (applicationUser.locationCodes == "*") {
 			return customerRepository.findAll().map { CustomerShortDTO(it) }
 		} else {
@@ -52,15 +59,29 @@ class CustomerService() {
 		}
 	}
 
-	/* Get the details of a customer */
+	/**
+	 * Get the details of a customer
+	 * @param username the user login
+	 * @param locationCode the customer location code
+	 * @return the customer details
+	 */
 	fun customer(username: String, locationCode: String): CustomerDTO {
 		userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
 		val customer = customerRepository.findByLocationCode(locationCode) ?: throw IllegalArgumentException("Customer not found")
+
+		/* The client account list for this customer is stored in VBT and not locally, so retrieve it via API */
 		val accountList = clientAccountRepository.clientAccounts(locationCode, "CLI")
 		customer.clientAccounts.addAll(accountList)
+
 		return CustomerDTO(customer)
 	}
 
+	/**
+	 * Onbard a new customer. This creates the customer in the application database
+	 * @param username the user login
+	 * @param request the customer details
+	 * @return the customer details
+	 */
 	/* Onboard a new customer */
 	fun addCustomer(username: String, request: CustomerRequestDTO): CustomerDTO {
 		val customer = request.toCustomer()
@@ -74,14 +95,24 @@ class CustomerService() {
 		return CustomerDTO(customer)
 	}
 
-	fun clientAccountDetails(username: String, @PathVariable id: String) : ClientAccountDTO {
+	/**
+	 * Get the details (name, currency, balances...) of a client account
+	 * @param username user login
+	 * @param id client account holder reference
+	 * @return the client account details object
+	 */
+	fun clientAccountDetails(username: String, id: String) : ClientAccountDTO {
 		// get the account location
 		val locationCode = id.substring(0, 6)
 		userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
+
+		/* Verify that an acocunt with this Id exists in the integration database (CLILST table) */
 		val account = clientAccountRepository.findById(id) ?: throw IllegalArgumentException("Account not found")
+
+		/* Get the customer object  to retrieve their API key */
 		val customer = customerRepository.findByLocationCode(locationCode) ?: throw IllegalArgumentException("Customer not found")
 
-		// get the account balance
+		/* get the account balance by invoking the VBT API */
 		account.setBalances(apiClient.setCustomer(customer).accountBalance(account.id, account.currency, account.type))
 
 		return ClientAccountDTO(account)

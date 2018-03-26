@@ -4,7 +4,7 @@ import com.gresham.td.model.Customer
 import com.gresham.td.model.TermDepositStatus
 
 
-class CustomerShortDTO(customer: Customer) {
+open class CustomerShortDTO(customer: Customer) {
 	val name = customer.name
 	val locationCode = customer.locationCode
 	val naturalAccount = customer.naturalAccount

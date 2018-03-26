@@ -177,7 +177,7 @@ class TermDepositService {
 		termDeposit.dailyGrossClientInterest = termDeposit.dailyGrossCustomerInterest - termDeposit.dailyHaircut
 
 		// daily WHT
-		val whtRate = whtService.getRate()
+		val whtRate = whtService.getRate(termDeposit.sourceAccount)
 		termDeposit.dailyWHT = termDeposit.dailyGrossClientInterest * whtRate / 100.0
 
 		// final interest paid to client
