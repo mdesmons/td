@@ -111,32 +111,21 @@ class CalendarService : InitializingBean {
 		}
 		return cal.time
 	}
-
+	
 	/**
-	 * Add a given number of days to a date
-	 * @param date the date to which days must be added
-	 * @param number the number of days to add
+	 * Add a time period to a date
+	 * @param date the date to add the period to
+	 * @param unit the period unit (eg Calendar.MONTH, Calendar.DAY_OF_MONTH ...).
+	 * @param number the number of periods to add
 	 * @return the resulting date
 	 */
-	fun addDays(date: Date, number: Int) : Date {
+	fun addPeriod(date: Date, unit: Int, number: Int) : Date {
 		val cal = Calendar.getInstance()
 		cal.time = date
-		cal.add(Calendar.DAY_OF_MONTH, number)
+		cal.add(unit, number)
 		return cal.time
 	}
 
-	/**
-	 * Add a given number of months to a date
-	 * @param date the date to which days must be added
-	 * @param number the number of months to add
-	 * @return the resulting date
-	 */
-	fun addMonths(date: Date, number: Int) : Date {
-		val cal = Calendar.getInstance()
-		cal.time = date
-		cal.add(Calendar.MONTH, number)
-		return cal.time
-	}
 
 	/**
 	 * Calculate the number of days between 2 dates
@@ -144,7 +133,7 @@ class CalendarService : InitializingBean {
 	 * @param dateFrom the start of the date range
 	 * @return the number of days between [dateTo] and [dateFrom]
 	 */
-	fun diffDays(dateTo: Date, dateFrom: Date): Int {
+	fun diffDays(dateTo: Date, dateFrom: Date): Long {
 		val d1 = dateTo.toInstant()
 				.atZone(ZoneId.systemDefault())
 				.toLocalDate()
@@ -152,6 +141,6 @@ class CalendarService : InitializingBean {
 				.atZone(ZoneId.systemDefault())
 				.toLocalDate()
 
-		return ChronoUnit.DAYS.between(d2, d1).toInt()
+		return ChronoUnit.DAYS.between(d2, d1)
 	}
 }

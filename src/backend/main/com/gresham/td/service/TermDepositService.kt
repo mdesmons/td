@@ -38,6 +38,12 @@ class TermDepositService {
 	@Value("\${td.cache.notify.folder}")
 	private val cacheOutputDir: String? = ""
 
+	/**
+	 * Prepares a DB record that represents the transfer from the NAT account to the NAT-TD.
+	 * Note this method does not actually write in DB
+	 * @param termDeposit the Term Deposit that causes this transfer
+	 * @return the Transfer object
+	 */
 	private fun createTransferFromPrincipal(termDeposit: TermDeposit): Transfer {
 		return Transfer(type = TransferType.principal,
 				currency = termDeposit.currency,
@@ -47,15 +53,27 @@ class TermDepositService {
 				termDeposit = termDeposit)
 	}
 
-
-	private fun createTransfers(termDeposit: TermDeposit, term: Long): List<Transfer> {
+	/**
+	 * Prepares DB records that represent an interest payment and associated WHT & Margin payments for a given term.
+	 * Note this method does not actually write in DB
+	 *
+	 * This method is used to create the records in DB for an at-maturity interest payment, or for the last payment
+	 * of a monthly interest TD
+	 *
+	 * @param termDeposit the Term Deposit that causes those transfers
+	 * @param term the term in days for those payments
+	 * @param date date at which the transfers are scheduled
+	 * @return the list of created transfers
+	 */
+	private fun createTransfers(termDeposit: TermDeposit, term: Long, date: Date): List<Transfer> {
 		val ret = mutableListOf<Transfer>()
 		// interest payment from INT TD to CLI
 		val interestPayment = Transfer(type = TransferType.interest,
 				currency = termDeposit.currency,
 				amount = Math.round(termDeposit.dailyNetClientInterest * term * 100.0) / 100.0,
 				narrative = "Interest from INT TD to CLI",
-				termDeposit = termDeposit)
+				termDeposit = termDeposit,
+				date = date)
 		ret.add(interestPayment)
 
 		if (termDeposit.dailyWHT != 0.0) {
@@ -64,7 +82,8 @@ class TermDepositService {
 					currency = termDeposit.currency,
 					amount = Math.round(termDeposit.dailyWHT * term * 100.0) / 100.0,
 					narrative = "WHT payment from INT TD to WHT",
-					termDeposit = termDeposit)
+					termDeposit = termDeposit,
+					date = date)
 			ret.add(whtPayment)
 		}
 
@@ -74,28 +93,54 @@ class TermDepositService {
 					currency = termDeposit.currency,
 					amount = Math.round(termDeposit.dailyHaircut * term * 100.0) / 100.0,
 					narrative = "Haircut payment from CLI TD to CLI",
-					termDeposit = termDeposit)
+					termDeposit = termDeposit,
+					date = date)
 			ret.add(haircut)
 		}
 		return ret
 	}
 
-	private fun createTransfersForPrincipalReturn(termDeposit: TermDeposit, date:Date? = null): Transfer {
-		val closeDate = date?:termDeposit.maturityDate
+	/**
+	 * Prepares DB records that represent the return of the Principal to NAT.
+	 * Note this method does not actually write in DB
+	 *
+	 * @param termDeposit the Term Deposit that causes the transfer
+	 * @param date date at which the transfer is scheduled
+	 * @return the created transfer
+	 */
+	private fun createTransfersForPrincipalReturn(termDeposit: TermDeposit, date:Date): Transfer {
 		return Transfer(type = TransferType.principalReturn,
 				currency = termDeposit.currency,
 				amount = termDeposit.principal,
-				date = closeDate,
+				date = date,
 				narrative = "Principal return from CLI TD to CLI",
 				termDeposit = termDeposit)
 	}
 
+	/**
+	 * Prepares DB records that represent the return of the Principal to NAT at a TD's maturity.
+	 * Note this method does not actually write in DB
+	 *
+	 * @param termDeposit the Term Deposit that causes the transfer
+	 * @return the created transfer
+	 */
+	private fun createTransfersForPrincipalReturn(termDeposit: TermDeposit): Transfer =
+		createTransfersForPrincipalReturn(termDeposit, termDeposit.maturityDate)
+
+
+
+	/**
+	 * Prepares DB records that represent the return of the Principal to NAT at a TD's maturity + interest, WHT, margin payments.
+	 * Note this method does not actually write in DB
+	 *
+	 * @param termDeposit the Term Deposit that causes the transfer
+	 * @return the created transfer
+	 */
 	private fun createTransfersForAtCallPayment(termDeposit: TermDeposit): List<Transfer> {
 		val ret = mutableListOf<Transfer>()
 
 		// create final payment
-		val transfers = createTransfers(termDeposit, termDeposit.term.toLong())
-		transfers.forEach { it.date = termDeposit.maturityDate }
+		val transfers = createTransfers(termDeposit, termDeposit.term.toLong(), termDeposit.maturityDate)
 		ret.addAll(transfers)
 
 		// Principal return from TD to CLI
@@ -104,24 +149,25 @@ class TermDepositService {
 		return ret
 	}
 
-	private fun createTransfersForMonthlyPayment(termDeposit: TermDeposit): List<Transfer> {
+
+
+	private fun createTransfersForPeriodicPayment(termDeposit: TermDeposit, unit: Int, period: Int): List<Transfer> {
 		val ret = mutableListOf<Transfer>()
 		var date = Date(termDeposit.valueDate.time)
+		var prevDate = date;
 
-		date = calendarService.addDays(date, 30)
+		date = calendarService.addPeriod(date, unit, period)
 
+		/* Schedule a set of payments each month */
 		while (date.before(termDeposit.maturityDate)) {
-			val transfers = createTransfers(termDeposit, 30)
-			transfers.forEach { it.date = date }
-			ret.addAll(transfers)
-			date = calendarService.addDays(date, 30)
+			ret.addAll(createTransfers(termDeposit, calendarService.diffDays(date, prevDate), date))
+			prevDate = date
+			date = calendarService.addPeriod(date, unit, period)
 		}
 
 		// create final payment
-		val lastPaymentTerm = termDeposit.term.rem(30).toLong()
-		val transfers = createTransfers(termDeposit, lastPaymentTerm)
-		transfers.forEach { it.date = termDeposit.maturityDate }
-		ret.addAll(transfers)
+		val lastPaymentTerm = calendarService.diffDays(termDeposit.maturityDate, prevDate)
+		ret.addAll(createTransfers(termDeposit, lastPaymentTerm, termDeposit.maturityDate))
 
 		// Principal return from TD to CLI
 		ret.add(createTransfersForPrincipalReturn(termDeposit))
@@ -129,16 +175,46 @@ class TermDepositService {
 		return ret
 	}
 
+	/**
+	 * Prepares DB records that represent the return of the Principal to NAT at a TD's maturity +
+	 * interest, WHT, margin payments for monthly payments.
+	 * Note this method does not actually write in DB
+	 *
+	 * @param termDeposit the Term Deposit that causes the transfer
+	 * @return the created transfer
+	 */
+	private fun createTransfersForMonthlyPayment(termDeposit: TermDeposit): List<Transfer> =
+			createTransfersForPeriodicPayment(termDeposit, Calendar.MONTH, 1)
+
+	private fun createTransfersForQuarterlyPayment(termDeposit: TermDeposit): List<Transfer> =
+			createTransfersForPeriodicPayment(termDeposit, Calendar.MONTH, 3)
+
+	private fun createTransfersForHalfYearlyPayment(termDeposit: TermDeposit): List<Transfer>  =
+			createTransfersForPeriodicPayment(termDeposit, Calendar.MONTH, 6)
+
+	private fun createTransfersForYearlyPayment(termDeposit: TermDeposit): List<Transfer>  =
+			createTransfersForPeriodicPayment(termDeposit, Calendar.YEAR, 1)
+
+	/**
+	 * Creates a Term Deposit. This method will also schedule all the payments that are induced by the TD
+	 * @param username login of the user making the request
+	 * @param request the TD request
+	 * @param locationCode the TD location code
+	 * @return the created TD
+	 */
 	fun addTermDeposit(username: String, locationCode: String, request: TermDepositRequestDTO): TermDepositDTO {
 		// check the user has access to the location code
 		userDetailsService.canAccessLocation(username, locationCode) || throw IllegalArgumentException("Permission error")
 		val customer = customerRepository.findByLocationCode(locationCode) ?: throw IllegalArgumentException("Customer not found")
 
-		val user = userDetailsService.loadUserByUsername(username)
+		/* Create the TD object */
 		val termDeposit = request.toTermDeposit()
 		termDeposit.customer = customer
 
-		// set dates
+		/* calculate the value date (date at which the TD starts accruing interest. If the TD is opened on a business day,
+		it accrues interest immediately. Otherwise it accrues interest from the next business day
+		 */
+
 		termDeposit.openingDate = Date()
 		if (calendarService.isBusinessDay(termDeposit.openingDate)) {
 			termDeposit.valueDate = termDeposit.openingDate
@@ -151,15 +227,20 @@ class TermDepositService {
 		 */
 		if (request.maturity != 0L) {
 			termDeposit.maturityDate = Date(request.maturity)
-			termDeposit.term = calendarService.diffDays(termDeposit.maturityDate, termDeposit.valueDate)
+			termDeposit.term = calendarService.diffDays(termDeposit.maturityDate, termDeposit.valueDate).toInt()
 		} else {
-			termDeposit.maturityDate = calendarService.addDays(termDeposit.valueDate, termDeposit.term)
+			termDeposit.maturityDate = calendarService.addPeriod(termDeposit.valueDate, Calendar.DAY_OF_MONTH, termDeposit.term)
 		}
 
+		/* We use the interest provided by the bank, unless the TD was opened by the desk and the operator provided
+		an explicit rate
+		 */
 		if (request.interest == 0.0) {
 			// calculate interest
 			termDeposit.interest = interestService.getRate(username, locationCode, termDeposit.term, termDeposit.principal, termDeposit.paymentType).value
 		} else {
+			/* If a rate was provided, make sure the user is a Desk user */
+			val user = userDetailsService.loadUserByUsername(username)
 			if (user.authorities.contains(SimpleGrantedAuthority(UserCategory.desk.toString()))) {
 				termDeposit.interest = request.interest
 			} else {
@@ -167,7 +248,7 @@ class TermDepositService {
 			}
 		}
 
-		// daily gross interest accrued on the account (ie money we'll request from CACHE)
+		// daily gross interest accrued on the account (ie money we will request from CACHE)
 		termDeposit.dailyGrossCustomerInterest = termDeposit.interest * termDeposit.principal / (360.0 * 100.0)
 
 		// daily customer profit
@@ -183,9 +264,16 @@ class TermDepositService {
 		// final interest paid to client
 		termDeposit.dailyNetClientInterest = termDeposit.dailyGrossClientInterest - termDeposit.dailyWHT
 
+		/* create the transfers for the TD:
+			- transfer of principal from CLI to TD
+			- transfer of interest back to CLI at maturity or monthly
+			- payment of WHT from CLI at maturity or monthly
+			- payment of margin to the customer margin account (if relevant) at maturity or monthly
+			- transfer of principal back to CLI at maturity
+		 */
+
 		termDeposit.transfers.add(createTransferFromPrincipal(termDeposit))
 
-		// create transfers
 		if (termDeposit.paymentType == TermDepositPaymentType.AtMaturity) {
 			termDeposit.transfers.addAll(createTransfersForAtCallPayment(termDeposit))
 		} else {
@@ -228,7 +316,7 @@ class TermDepositService {
 		} else if (request.reason == TermDepositCloseReason.NoticePeriod) {
 			// check the end of notice period is not post maturity
 			var endOfNoticePeriod = Date()
-			endOfNoticePeriod = calendarService.addDays(endOfNoticePeriod, 31)
+			endOfNoticePeriod = calendarService.addPeriod(endOfNoticePeriod, Calendar.DAY_OF_MONTH, 31)
 			if (termDeposit.maturityDate.before(endOfNoticePeriod)) {
 				// error
 			} else {
@@ -253,7 +341,7 @@ class TermDepositService {
 	@Scheduled(cron = "\${td.close.schedule}")
 	fun closePendingTermDepositsImpl(): List<TermDepositDTO> {
 		var tomorrow = Date()
-		tomorrow = calendarService.addDays(tomorrow, 1)
+		tomorrow = calendarService.addPeriod(tomorrow, Calendar.DAY_OF_MONTH, 1)
 
 		val termDeposits = termDepositRepository.findByStatus(TermDepositStatus.PendingClosed).filter { it.technicalClosingDate.before(tomorrow) }
 		termDeposits.forEach { it.status = TermDepositStatus.Closed }
@@ -270,7 +358,7 @@ class TermDepositService {
 	@Scheduled(cron = "\${td.mature.schedule}")
 	fun matureTermDepositsImpl(): List<TermDepositDTO> {
 		var tomorrow = Date()
-		tomorrow = calendarService.addDays(tomorrow, 1)
+		tomorrow = calendarService.addPeriod(tomorrow, Calendar.DAY_OF_MONTH, 1)
 
 		val termDeposits = termDepositRepository.findByStatus(TermDepositStatus.Opened).filter { it.maturityDate.before(tomorrow) }
 		termDeposits.forEach { it.status = TermDepositStatus.PendingClosed }

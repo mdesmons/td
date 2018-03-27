@@ -27,7 +27,10 @@ enum class TermDepositCloseReason {
 
 enum class TermDepositPaymentType {
 	AtMaturity,
-	Monthly;
+	Monthly,
+	Quarterly,
+	HalfYearly,
+	Yearly;
 
 	@JsonValue
 	fun toValue() = ordinal
@@ -66,7 +69,7 @@ class TermDeposit(
 		This is when the payment of the Principal gets returned in the BTR */
 
 
-		// a TD has several transfers
+		// a TD has several transfers attached to it
 		@OneToMany(mappedBy = "termDeposit", cascade = arrayOf(CascadeType.ALL), fetch = FetchType.EAGER)
 		var transfers: MutableList<Transfer> = mutableListOf()
 )
