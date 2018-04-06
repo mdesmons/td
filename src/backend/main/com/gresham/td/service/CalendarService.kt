@@ -111,7 +111,7 @@ class CalendarService : InitializingBean {
 		}
 		return cal.time
 	}
-	
+
 	/**
 	 * Add a time period to a date
 	 * @param date the date to add the period to

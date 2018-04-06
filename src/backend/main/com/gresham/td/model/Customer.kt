@@ -11,13 +11,14 @@ class Customer (
 		var naturalAccount: String = "",
 		var naturalAccountCurrency: String = "AUD",
 		var haircutAllowed: Boolean = false,
+
 		var naturalTDAccount: String = "",
 		var interestTDAccount: String = "",
 		var controlTDAccount: String = "",
 		var haircutAccount: String = "",
 		var cacheTDAccount: String = "",
-		var monthlyInterestAllowed : Boolean = false,
 
+		var margin: Double = 0.0,   // customer TDs rate will be BBSW minus margin (minus payment type penalty)
 		// stuff for VBT API comms management
 		var certificate: String = "",
 		var keystorePass: String = "",

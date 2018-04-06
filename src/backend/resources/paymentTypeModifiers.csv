@@ -1,0 +1,6 @@
+paymentType,modifier
+Monthly,-0.04
+Quarterly,-0.03
+HalfYearly,-0.02
+Yearly,-0.01
+AtMaturity,0.00

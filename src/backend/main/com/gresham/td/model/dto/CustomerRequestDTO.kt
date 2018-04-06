@@ -10,18 +10,17 @@ class CustomerRequestDTO(		val locationCode: String = "",
 								 val cacheTDAccount: String = "",
 								 val certificate: String = "",
 								 val keystorePass: String = "",
-								 val keyAlias: String = "",
-								 val monthlyInterestAllowed : Boolean = false) {
+								 val keyAlias: String = ""
+								 ) {
 	fun toCustomer() : Customer {
 		val customer = Customer(
-				name = this.name,
+		name = this.name,
 		 locationCode = this.locationCode,
 		 haircutAllowed = this.haircutAllowed,
 		 cacheTDAccount = this.cacheTDAccount,
-		 monthlyInterestAllowed  = this.monthlyInterestAllowed,
-				certificate = this.certificate,
-				keyAlias = this.keyAlias,
-				keystorePass = this.keystorePass
+		certificate = this.certificate,
+		keyAlias = this.keyAlias,
+		keystorePass = this.keystorePass
 		)
 		return customer
 	}

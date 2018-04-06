@@ -8,22 +8,13 @@ class Onboard extends React.Component {
 	this.state =  {
 		name: "",
 		locationCode: "",
-		cacheTDAccount: "",
-		haircutAllowed: false,
-		monthlyInterestAllowed: false,
-		certificate: "",
-		keystorePass: "",
-		keyAlias: ""
+		haircutAllowed: false
 	}
 
     this.onNameChange = this.onNameChange.bind(this);
     this.onLocationCodeChange = this.onLocationCodeChange.bind(this);
-    this.onCacheTDAccountChange = this.onCacheTDAccountChange.bind(this);
     this.onHaircutAllowedChange = this.onHaircutAllowedChange.bind(this);
-    this.onMonthlyInterestAllowedChange = this.onMonthlyInterestAllowedChange.bind(this);
-    this.oncertificateChange = this.oncertificateChange.bind(this);
-    this.onkeystorePassChange = this.onkeystorePassChange.bind(this);
-    this.onKeyAliasChange = this.onKeyAliasChange.bind(this);
+    this.onMarginChange = this.onMarginChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
   }
 
@@ -44,27 +35,12 @@ class Onboard extends React.Component {
 		this.setState({locationCode : event.target.value})
 	}
 
-	onCacheTDAccountChange(event) {
-		this.setState({cacheTDAccount : event.target.value})
-	}
-
 	onHaircutAllowedChange(event) {
 		this.setState({haircutAllowed : event.target.checked})
 	}
 
-	onMonthlyInterestAllowedChange(event) {
-		this.setState({monthlyInterestAllowed : event.target.checked})
-	}
-	oncertificateChange(event) {
-		this.setState({certificate : event.target.value})
-	}
-
-	onkeystorePassChange(event) {
-		this.setState({keystorePass : event.target.value})
-	}
-
-	onKeyAliasChange(event) {
-		this.setState({keyAlias : event.target.value})
+	onMarginChange(event) {
+		this.setState({margin : event.target.value})
 	}
 
 	render() {
@@ -96,45 +72,16 @@ class Onboard extends React.Component {
 						</div>
 
 						<div className="form-group">
-							<label htmlFor="cacheTDAccount">Cache TD Account</label>
-							<input type="text" className="form-control" id="cacheTDAccount" aria-describedby="emailHelp" placeholder="000000000" defaultValue= {this.state.cacheTDAccount} onChange={this.onCacheTDAccountChange} required/>
+							<label htmlFor="margin">Customer margin</label>
+							<input type="number" className="form-control" id="margin" aria-describedby="emailHelp" placeholder="0.0" step="0.01" defaultValue= {this.state.margin} onChange={this.onMarginChange} required/>
 							<div className="invalid-feedback">
-								 Please enter a valid account number
+								 Please enter a valid 6-digit location code
 							</div>
 						</div>
 
 						<div className="form-check">
 							<input type="checkbox" className="form-check-inputEx" id="haircutAllowed" aria-describedby="emailHelp" onChange={this.onHaircutAllowedChange} />
 							<label htmlFor="haircutAllowed" className="form-check-label">Haircut allowed</label>
-						</div>
-
-						<div className="form-check">
-							<input type="checkbox" className="form-check-inputEx" id="monthlyInterestAllowed" aria-describedby="emailHelp" onChange={this.onMonthlyInterestAllowedChange} />
-							<label htmlFor="monthlyInterestAllowed" className="form-check-label">Monthly interest allowed</label>
-						</div>
-
-						<div className="form-group">
-							<label htmlFor="certificate">Certificate name</label>
-							<input type="text" autoComplete="off" className="form-control" id="certificate" aria-describedby="emailHelp" placeholder="Provided by Fileactive" defaultValue= {this.state.certificate} onChange={this.oncertificateChange} required/>
-							<div className="invalid-feedback">
-								 Please enter a certificate name
-							</div>
-						</div>
-
-						<div className="form-group">
-							<label htmlFor="keystorePass">Certificate password</label>
-							<input type="password" autoComplete="off" className="form-control" id="keystorePass" aria-describedby="emailHelp" value= {this.state.keystorePass} onChange={this.onkeystorePassChange} required/>
-							<div className="invalid-feedback">
-								 Please enter a certificate password
-							</div>
-						</div>
-
-						<div className="form-group">
-							<label htmlFor="keyAlias">Certificate key alias</label>
-							<input type="text" autoComplete="off" className="form-control" id="keyAlias" aria-describedby="emailHelp" placeholder="Provided by Fileactive" defaultValue= {this.state.keyAlias} onChange={this.onKeyAliasChange} required/>
-							<div className="invalid-feedback">
-								 Please enter a certificate key alias
-							</div>
 						</div>
 
 						<button type="submit" className="btn btn-success mr-3">Create TD Customer</button>

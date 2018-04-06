@@ -154,7 +154,7 @@ class TermDepositService {
 	private fun createTransfersForPeriodicPayment(termDeposit: TermDeposit, unit: Int, period: Int): List<Transfer> {
 		val ret = mutableListOf<Transfer>()
 		var date = Date(termDeposit.valueDate.time)
-		var prevDate = date;
+		var prevDate = date
 
 		date = calendarService.addPeriod(date, unit, period)
 
@@ -227,9 +227,9 @@ class TermDepositService {
 		 */
 		if (request.maturity != 0L) {
 			termDeposit.maturityDate = Date(request.maturity)
-			termDeposit.term = calendarService.diffDays(termDeposit.maturityDate, termDeposit.valueDate).toInt()
+			termDeposit.term = calendarService.diffDays(termDeposit.maturityDate, termDeposit.valueDate)
 		} else {
-			termDeposit.maturityDate = calendarService.addPeriod(termDeposit.valueDate, Calendar.DAY_OF_MONTH, termDeposit.term)
+			termDeposit.maturityDate = calendarService.addPeriod(termDeposit.valueDate, Calendar.DAY_OF_MONTH, termDeposit.term.toInt())
 		}
 
 		/* We use the interest provided by the bank, unless the TD was opened by the desk and the operator provided
@@ -237,7 +237,7 @@ class TermDepositService {
 		 */
 		if (request.interest == 0.0) {
 			// calculate interest
-			termDeposit.interest = interestService.getRate(username, locationCode, termDeposit.term, termDeposit.principal, termDeposit.paymentType).value
+			termDeposit.interest = interestService.getRate(username, locationCode, termDeposit.term, termDeposit.paymentType).value
 		} else {
 			/* If a rate was provided, make sure the user is a Desk user */
 			val user = userDetailsService.loadUserByUsername(username)
@@ -274,10 +274,12 @@ class TermDepositService {
 
 		termDeposit.transfers.add(createTransferFromPrincipal(termDeposit))
 
-		if (termDeposit.paymentType == TermDepositPaymentType.AtMaturity) {
-			termDeposit.transfers.addAll(createTransfersForAtCallPayment(termDeposit))
-		} else {
-			termDeposit.transfers.addAll(createTransfersForMonthlyPayment(termDeposit))
+		when (termDeposit.paymentType) {
+			TermDepositPaymentType.AtMaturity -> termDeposit.transfers.addAll(createTransfersForAtCallPayment(termDeposit))
+			TermDepositPaymentType.Monthly -> termDeposit.transfers.addAll(createTransfersForMonthlyPayment(termDeposit))
+			TermDepositPaymentType.Quarterly -> termDeposit.transfers.addAll(createTransfersForQuarterlyPayment(termDeposit))
+			TermDepositPaymentType.HalfYearly -> termDeposit.transfers.addAll(createTransfersForHalfYearlyPayment(termDeposit))
+			TermDepositPaymentType.Yearly -> termDeposit.transfers.addAll(createTransfersForYearlyPayment(termDeposit))
 		}
 
 		termDepositRepository.save(termDeposit)

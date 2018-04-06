@@ -15,4 +15,4 @@ open class CustomerShortDTO(customer: Customer) {
 	val controlTDAccount = customer.controlTDAccount
 	val haircutAccount = customer.haircutAccount
 	val cacheTDAccount = customer.cacheTDAccount
-	val monthlyInterestAllowed  = customer.monthlyInterestAllowed}
+}

@@ -41,7 +41,7 @@ class CustomerControllerV1 {
 	fun addCustomer(principal: Principal?, @RequestBody customer: CustomerRequestDTO): Map<String, List<CustomerDTO>> {
 
 		if (principal != null) {
-			return hashMapOf("customers" to listOf<CustomerDTO>(customerService.addCustomer(principal.name, customer)))
+			return hashMapOf("customers" to listOf(customerService.addCustomer(principal.name, customer)))
 		}
 
 		throw IllegalArgumentException("Unknown user")
@@ -70,12 +70,11 @@ class CustomerControllerV1 {
 	@PutMapping("/{location_code}/rate/")
 	fun rate(principal: Principal?, @PathVariable location_code: String, @RequestBody request: RateRequestDTO): Map<String, List<RateDTO>> {
 		if (principal != null) {
-			if (request.term != 0) {
+			if (request.term != 0L) {
 				return hashMapOf("interestRate" to listOf(rateService.getRate(
 						principal.name,
 						location_code,
 						request.term,
-						request.principal,
 						request.paymentType
 				)))
 			} else {
@@ -86,7 +85,6 @@ class CustomerControllerV1 {
 						location_code,
 						Date(),
 						maturityDate,
-						request.principal,
 						request.paymentType
 				)))
 			}

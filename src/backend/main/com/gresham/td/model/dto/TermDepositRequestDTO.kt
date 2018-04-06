@@ -10,7 +10,7 @@ class TermDepositRequestDTO(
 		val principal: Double = 0.0,
 		val haircut: Double = 0.0,
 		val interest: Double = 0.0, // used by the desk to override the proposed rate
-		val term:Int = 0, // term in days
+		val term:Long = 0, // term in days
 		val maturity: Long = 0, // in milliseconds since the epoch. Can be used to specify a maturity date, instead of a term
 		val paymentType: TermDepositPaymentType = TermDepositPaymentType.AtMaturity
 ) {

@@ -53,7 +53,7 @@ class TermDeposit(
 		var principal: Double = 0.0,
 		var interest: Double = 0.0,
 		var haircut: Double = 0.0,
-		var term: Int = 0,
+		var term: Long = 0,
 		var openingDate: Date = Date(),
 		var valueDate: Date = Date(0),   // date the TD starts accrue interest
 		var maturityDate: Date = Date(0),

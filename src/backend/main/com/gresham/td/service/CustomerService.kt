@@ -91,6 +91,15 @@ class CustomerService() {
 		val existingCustomer = customerRepository.findByLocationCode(customer.locationCode)
 		if (existingCustomer != null) throw IllegalArgumentException("Customer already exists")
 
+		// TODO set certificate path, alias, keystore password
+		// TODO find support account numbers from database
+		customer.naturalTDAccount = "123456"
+		customer.interestTDAccount = "234567"
+		customer.controlTDAccount = "345678"
+		customer.haircutAccount = "456789"
+		customer.cacheTDAccount = "567890"
+		customer.naturalAccount = "678901"
+
 		customerRepository.save(customer)
 		return CustomerDTO(customer)
 	}

@@ -24,15 +24,13 @@ class AddTermDeposit extends React.Component {
     this.onPrincipalChange = this.onPrincipalChange.bind(this);
     this.onInterestRateChange = this.onInterestRateChange.bind(this);
     this.onHaircutChange = this.onHaircutChange.bind(this);
-    this.onMonthlyInterestChange = this.onMonthlyInterestChange.bind(this);
+    this.onPaymentTypeChange = this.onPaymentTypeChange.bind(this);
     this.onTermMonthsChange = this.onTermMonthsChange.bind(this);
     this.onTermDaysChange = this.onTermDaysChange.bind(this);
     this.onSourceAccountChange = this.onSourceAccountChange.bind(this);
     this.onMaturityDateChange = this.onMaturityDateChange.bind(this);
     this.onOverrideRateChange = this.onOverrideRateChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
-
-
   }
 
 
@@ -78,8 +76,6 @@ class AddTermDeposit extends React.Component {
 
 	onPrincipalChange(event) {
 		this.setState({principal : event.target.value})
-//		console.log(this.state)
-//		this.props.onRecalculateInterest(this.state)
 	}
 
 	onInterestRateChange(event) {
@@ -90,8 +86,8 @@ class AddTermDeposit extends React.Component {
 		this.setState({haircut : event.target.value})
 	}
 
-	onMonthlyInterestChange(event) {
-		this.setState({monthlyInterest : event.target.checked})
+	onPaymentTypeChange(event) {
+		this.setState({paymentType : event.target.value})
 //		this.props.onRecalculateInterest(this.state)
 	}
 
@@ -131,12 +127,10 @@ class AddTermDeposit extends React.Component {
 	componentDidUpdate(prevProps, prevState) {
 		if ((this.state.termMonths != prevState.termMonths) ||
 		(this.state.termDays != prevState.termDays) ||
-		(this.state.principal != prevState.principal) ||
 		(this.state.maturityDate != prevState.maturityDate) ||
-		(this.state.monthlyInterest != prevState.monthlyInterest)) {
+		(this.state.paymentType != prevState.paymentType)) {
 
 			var output = {
-				principal: this.state.principal,
 			}
 
 			if (this.state.termDays != "") {
@@ -150,11 +144,7 @@ class AddTermDeposit extends React.Component {
 				return
 			}
 
-			if (this.state.monthlyInterest) {
-				output.paymentType = 1
-			} else {
-				output.paymentType = 0
-			}
+			output.paymentType = this.state.paymentType
 
 			this.props.onRecalculateInterest(output)
 		}
@@ -228,16 +218,22 @@ class AddTermDeposit extends React.Component {
 						</div>
 
 						<div className="form-group">
+							<label htmlFor="paymentType">Interest payment type</label>
+							<select className="form-control" id="paymentType"  onChange={this.onPaymentTypeChange} value= {this.state.paymentType}>
+								<option value="0">At Maturity</option>
+								<option value="1">Monthly</option>
+								<option value="2">Quarterly</option>
+								<option value="3">Half Yearly</option>
+								<option value="4">Yearly</option>
+							</select>
+						</div>
+
+						<div className="form-group">
 							<label htmlFor="haircut">Haircut rate</label>
 							<input type="number" step="0.01" min="0" className="form-control" id="haircut" placeholder="0.00" defaultValue= {this.state.haircut} onChange={this.onHaircutChange} disabled={!this.props.customer.get('haircutAllowed')}/>
 							<div className="invalid-feedback">
 								 Please enter a valid rate
 							</div>
-						</div>
-
-						<div className="form-check">
-							<input type="checkbox" className="form-check-inputEx" id="monthlyInterest" onChange={this.onMonthlyInterestChange}  disabled={!this.props.customer.get('monthlyInterestAllowed')}/>
-							<label htmlFor="monthlyInterest" className="form-check-label">Monthly interest</label>
 						</div>
 
 						<button type="submit" className="btn btn-success mr-3">Create Term Deposit</button>
