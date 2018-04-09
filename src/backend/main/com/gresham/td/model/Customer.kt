@@ -29,6 +29,10 @@ class Customer (
 
 		// a customer has several TDs
 		@OneToMany(mappedBy = "customer", cascade = arrayOf(CascadeType.ALL), fetch = FetchType.EAGER)
-		var termDeposits: MutableSet<TermDeposit> = mutableSetOf<TermDeposit>()
+		var termDeposits: MutableSet<TermDeposit> = mutableSetOf<TermDeposit>(),
+
+		// a customer has several Quotes
+		@OneToMany(mappedBy = "customer", cascade = arrayOf(CascadeType.ALL), fetch = FetchType.EAGER)
+		var quotes: MutableSet<Quote> = mutableSetOf<Quote>()
 )
 
