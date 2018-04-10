@@ -23,7 +23,6 @@ class TermDepositList extends React.Component {
 		sortField: 'valueDate'
 	}
 
-	this.data = Array.from(this.props.termDeposits)
     this.getTDList = this.getTDList.bind(this);
     this.swapOrder = this.swapOrder.bind(this);
     this.onHeaderClick = this.onHeaderClick.bind(this);
@@ -57,16 +56,16 @@ class TermDepositList extends React.Component {
 	}
 
 
-	getTDList() {
+	getTDList(data) {
 		var self = this
 		if (this.state.asc) {
-			return this.data.sort(function(a, b) {
+			return data.sort(function(a, b) {
 				if (a.get(self.state.sortField) == b.get(self.state.sortField)) return 0
 				if (a.get(self.state.sortField) < b.get(self.state.sortField)) return -1
 				if (a.get(self.state.sortField) > b.get(self.state.sortField)) return 1
 				})
 		} else {
-			return this.data.sort(function(a, b) {
+			return data.sort(function(a, b) {
 				if (a.get(self.state.sortField) == b.get(self.state.sortField)) return 0
 				if (a.get(self.state.sortField) > b.get(self.state.sortField)) return -1
 				if (a.get(self.state.sortField) < b.get(self.state.sortField)) return 1
@@ -96,7 +95,7 @@ class TermDepositList extends React.Component {
 							</tr>
 						</thead>
 						<tbody>
-							{this.getTDList().map(td => <TermDepositItem key={td.get('id')} termDeposit={td} onClick={() => this.props.onTermDepositSelected(td.get('id'))} />)}
+							{this.getTDList(this.props.termDeposits).map(td => <TermDepositItem key={td.get('id')} termDeposit={td} onClick={() => this.props.onTermDepositSelected(td.get('id'))} />)}
 						</tbody>
 					</table>
 				</div>

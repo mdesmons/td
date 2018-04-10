@@ -1,20 +1,22 @@
 import { combineReducers } from 'redux-immutable'
 import clientAccounts from './clientAccounts'
+import connectionStatus from './connectionStatus'
 import customers from './customers'
-import termDeposits from './termDeposits'
 import error from './error'
 import interestRate from './interestRate'
+import quotes from './quotes'
+import termDeposits from './termDeposits'
 import transfers from './transfers'
-import connectionStatus from './connectionStatus'
 
 const reducers = combineReducers({
   clientAccounts,
-  customers,
-  termDeposits,
   connectionStatus,
+  customers,
+  error,
   interestRate,
-  transfers,
-  error
+  quotes,
+  termDeposits,
+  transfers
 })
 
 

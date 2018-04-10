@@ -20,6 +20,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 		onCreateTermDeposit: () => { browserHistory.push("/addTermDeposit/" + ownProps.params.id)},
 		onListTermDeposits: () => { browserHistory.push("/termDepositList/" + ownProps.params.id)},
 		onCreateBulkTermDeposit: () => { browserHistory.push("/addBulkTermDeposit/" + ownProps.params.id)},
+		onManageQuotes: () => { browserHistory.push("/quotes/" + ownProps.params.id)},
 		onClearError: () => { dispatch(clearError()) }
 	}
 }

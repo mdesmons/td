@@ -6,13 +6,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.gresham.td.persistence.CustomerRepository
 import com.gresham.td.persistence.QuoteRepository
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
 import java.time.ZonedDateTime
 import java.util.*
 
-
 @Service
 class QuoteService {
+	private val logger = LoggerFactory.getLogger(CustomerService::class.java)
+
 	@Autowired
 	lateinit var customerRepository: CustomerRepository
 
@@ -65,9 +68,23 @@ class QuoteService {
 
 	fun closeQuote(username: String, id: Long): QuoteDTO {
 		val quote = quoteRepository.findOne(id) ?: throw IllegalArgumentException("Unknown quote")
+
+		// check the user has access to the location code
+		userDetailsService.canAccessLocation(username, quote.customer.locationCode) || throw IllegalArgumentException("Permission error")
+
 		quote.status = QuoteStatus.Closed
 		quoteRepository.save(quote)
 		return QuoteDTO(quote)
 	}
 
+	/* Close all TDs that are marked as PendingClose, and whose close date is today or before (aka technical close) */
+	@Scheduled(cron = "\${quote.close.schedule}")
+	fun closeExpiredQuotesl(): List<QuoteDTO> {
+		logger.info("Closing expired quotes")
+		val now = Date()
+		val quotes = quoteRepository.findByStatus(QuoteStatus.Opened).filter { it.closingDate.before(now) }
+		quotes.forEach { it.status = QuoteStatus.Closed }
+		quoteRepository.save(quotes)
+		return quotes.map{ QuoteDTO(it)}
+	}
 }

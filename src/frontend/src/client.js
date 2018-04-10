@@ -62,12 +62,18 @@ export function normalizeComplexResponse(originalData) {
 		// Define the schema
 	const transferSchema = new schema.Entity('transfers');
 	const transferListSchema = new schema.Array(transferSchema);
+
 	const termDepositSchema = new schema.Entity('termDeposits', {transfers: transferListSchema});
 	const termDepositListSchema = new schema.Array(termDepositSchema);
 	const clientAccountSchema = new schema.Entity('clientAccounts', {clientAccounts: clientAccountListSchema});
 	const clientAccountListSchema = new schema.Array(clientAccountSchema);
 
-	const customerSchema = new schema.Entity('customers', {termDeposits: termDepositListSchema, clientAccounts: clientAccountListSchema}, {idAttribute: "locationCode"});
+	const quoteSchema = new schema.Entity('quotes');
+	const quoteListSchema = new schema.Array(quoteSchema);
+
+	const customerSchema = new schema.Entity('customers', {termDeposits: termDepositListSchema,
+	clientAccounts: clientAccountListSchema,
+	quotes: quoteListSchema}, {idAttribute: "locationCode"});
 	const customerListSchema = new schema.Array(customerSchema);
 
 	const interestRateSchema = new schema.Entity('interestRate');
@@ -81,7 +87,8 @@ export function normalizeComplexResponse(originalData) {
 		clientAccounts: [clientAccountSchema],
 		transfers: [transferSchema],
 		termDeposits: [termDepositSchema],
-		interestRate: [interestRateSchema]
+		interestRate: [interestRateSchema],
+		quotes: [quoteSchema]
 	};
 
 	let normalizedModel = normalize(originalData, modelSchema).entities;
@@ -100,6 +107,7 @@ export function normalizeComplexResponse(originalData) {
 	if (!model.has('termDeposits')) { model = model.set('termDeposits', Map())}
 	if (!model.has('transfers')) { model = model.set('transfers', Map())}
 	if (!model.has('clientAccounts')) { model = model.set('clientAccounts', Map())}
+	if (!model.has('quotes')) { model = model.set('quotes', Map())}
 
 	return model
 }

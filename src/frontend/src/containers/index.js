@@ -1,12 +1,13 @@
-import CustomerContainer from './CustomerContainer';
-import TermDepositListContainer from './TermDepositListContainer';
-import TermDepositContainer from './TermDepositContainer';
-import CustomerListContainer from './CustomerListContainer';
-import OnboardContainer from './OnboardContainer';
-import AppContainer from './AppContainer';
-import HomeContainer  from './HomeContainer';
-import AddTermDepositContainer  from './AddTermDepositContainer';
 import AddBulkTermDepositContainer  from './AddBulkTermDepositContainer';
+import AddTermDepositContainer  from './AddTermDepositContainer';
+import AppContainer from './AppContainer';
+import CustomerContainer from './CustomerContainer';
+import CustomerListContainer from './CustomerListContainer';
+import HomeContainer  from './HomeContainer';
+import OnboardContainer from './OnboardContainer';
+import QuotesContainer  from './QuotesContainer';
+import TermDepositContainer from './TermDepositContainer';
+import TermDepositListContainer from './TermDepositListContainer';
 
 export default {
 	appContainer: AppContainer,
@@ -17,6 +18,7 @@ export default {
 	HomeContainer,
 	AddTermDepositContainer,
 	AddBulkTermDepositContainer,
-	OnboardContainer
+	OnboardContainer,
+	QuotesContainer
 }
 

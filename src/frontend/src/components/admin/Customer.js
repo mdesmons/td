@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'react-router'
 var ImmutablePropTypes = require('react-immutable-proptypes');
 
-const Customer = ({onCreateTermDeposit, onListTermDeposits, onCreateBulkTermDeposit, customer}) => (
+const Customer = ({onCreateTermDeposit, onListTermDeposits, onCreateBulkTermDeposit, onManageQuotes, customer}) => (
 	<div className="container-fluid">
 		<div className="row">
 			<div className="col-md-1"></div>
@@ -20,6 +20,7 @@ const Customer = ({onCreateTermDeposit, onListTermDeposits, onCreateBulkTermDepo
 						<button type="button" className="btn mr-3 btn-lg btn-block" onClick={()=>onListTermDeposits()}>Show Term Deposits</button>
 						<button type="button" className="btn mr-3 btn-lg btn-block" onClick={()=>onCreateTermDeposit()}>Create Term Deposit</button>
 						<button type="button" className="btn mr-3 btn-lg btn-block" onClick={()=>onCreateBulkTermDeposit()}>Create Bulk Term Deposits</button>
+						<button type="button" className="btn mr-3 btn-lg btn-block" onClick={()=>onManageQuotes()}>Create Quote</button>
 						</div>
 					</form>
 				</div>

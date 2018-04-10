@@ -117,6 +117,37 @@ export const closeTermDeposit = (id, request) => {
 	}
 }
 
+
+const addQuoteImpl = (data) => {
+  return {
+    type: 'ADD_QUOTE',
+    data
+  }
+}
+
+export const addQuote = (id, data) => {
+ 	return function (dispatch) {
+  		return restPost('/api/v1/quote/' + id + "/", data)
+			.done((resp) => { dispatch(addQuoteImpl(normalizeComplexResponse(resp)))})
+			.fail((resp) => { dispatch(signalError(normalizeComplexResponse(resp.responseJSON)))})
+  	}
+}
+
+const closeQuoteImpl = (data) => {
+  return {
+    type: 'CLOSE_QUOTE',
+    data
+  }
+}
+
+export const closeQuote = (id) => {
+	return function (dispatch) {
+		return restDelete('/api/v1/quote/' + id + '/')
+			.done((data) => { dispatch(closeQuoteImpl(normalizeComplexResponse(data)))})
+			.fail((data) => { dispatch(signalError(normalizeComplexResponse(data.responseJSON)))})
+	}
+}
+
 const clientAccountDetailsImpl = (data) => {
   return {
     type: 'CLIENT_ACCOUNT_DETAILS',

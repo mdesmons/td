@@ -1,11 +1,8 @@
 package com.gresham.td.controller
 
-import com.gresham.td.model.dto.CloseTermDepositRequestDTO
 import com.gresham.td.model.dto.QuoteDTO
 import com.gresham.td.model.dto.QuoteRequestDTO
-import com.gresham.td.model.dto.TermDepositDTO
 import com.gresham.td.service.QuoteService
-import com.gresham.td.service.TermDepositService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import java.security.Principal
@@ -26,7 +23,7 @@ class QuoteControllerV1() {
 	}
 
 	// create a quote for a customer
-	@PostMapping("/{location_code}/quote/")
+	@PostMapping("/{location_code}/")
 	fun addQuote(principal: Principal?, @PathVariable location_code: String, @RequestBody request: QuoteRequestDTO) : Map<String, List<QuoteDTO>> {
 		if (principal != null) {
 			return hashMapOf("quotes" to listOf(quoteService.addQuote(principal.name, location_code, request)))

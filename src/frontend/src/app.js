@@ -41,6 +41,7 @@ const initializeUI = (store) => {
 			  <Route path="customer/:id" component={containers.CustomerContainer} />
 			  <Route path="addTermDeposit/:id" component={containers.AddTermDepositContainer} />
 			  <Route path="addBulkTermDeposit/:id" component={containers.AddBulkTermDepositContainer} />
+			  <Route path="quotes/:id" component={containers.QuotesContainer} />
 			</Route>
 		  </Router>
 		</Provider>
