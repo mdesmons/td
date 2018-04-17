@@ -82,7 +82,7 @@ class CalendarService : InitializingBean {
 		/* Return true if the date is not a Sunday, not a Saturday and not in the list of holidays */
 		return (day != Calendar.SATURDAY &&
 				day != Calendar.SUNDAY &&
-				holidays.contains(cal.time))
+				!holidays.contains(cal.time))
 	}
 
 
