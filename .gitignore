@@ -26,3 +26,6 @@ nbdist/
 ### Front end ###
 node_modules
 src/backend/resources/static
+
+### Back end ###
+src/backend/resources/application-user.properties
