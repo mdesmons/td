@@ -1,10 +1,10 @@
 {
-  "name": "spring-data-rest-and-reactjs",
+  "name": "term-deposits",
   "version": "0.1.0",
   "description": "Term Deposit Client",
   "keywords": [
+    "termdeposits",
     "rest",
-    "hateoas",
     "spring",
     "data",
     "react"
@@ -12,7 +12,6 @@
   "author": "Matthieu Desmons",
   "license": "Apache-2.0",
   "dependencies": {
-    "auth0-js": "^8.11.3",
     "bootstrap": "^4.0.0-beta.2",
     "immutable": "^3.8.2",
     "jquery": "^3.2.1",
@@ -26,7 +25,6 @@
     "react-redux": "^5.0.6",
     "react-redux-form": "^1.15.0",
     "react-router": "^3.2.0",
-    "react-stripe-checkout": "^2.6.3",
     "redux": "^3.7.2",
     "redux-immutable": "^4.0.0",
     "redux-thunk": "^2.2.0",

@@ -1,14 +1,6 @@
 import decode from 'jwt-decode';
-import { browserHistory } from 'react-router';
-import auth0 from 'auth0-js';
-var config = require('config')
-const ID_TOKEN_KEY = 'id_token';
 const ACCESS_TOKEN_KEY = 'access_token';
 
-const CLIENT_ID = 'iarob3YCLCJcAt48kRCJCrEiJicV242C';
-const CLIENT_DOMAIN = 'tennisladder.au.auth0.com';
-const SCOPE = 'standard openid email offline_access';
-const AUDIENCE = 'https://www.tennisladder.fun';
 
 export function logout() {
   clearAccessToken();
