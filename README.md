@@ -41,7 +41,7 @@ curl -H "Content-Type: application/json" -X POST http://localhost:8090/users/ini
 ### Back End
 
 In IntelliJ, create a run configuration of type Kotlin:
-![blah](https://www.dropbox.com/s/44v3pvi7914gb7h/kotlin.png?dl=0)
+![RunConfiguration](https://kb.greshamtech.com/download/attachments/52725431/kotlin.png?api=v2)
 
 Run this configuration.
 
