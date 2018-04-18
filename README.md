@@ -40,8 +40,14 @@ curl -H "Content-Type: application/json" -X POST http://localhost:8090/users/ini
 ## Running the TD server in dev mode
 ### Back End
 
-In IntelliJ, create a run configuration of type Kotlin:
+In IntelliJ, create a run configuration of type Kotlin (`Run/Edit Configurations...` menu):
 ![RunConfiguration](kotlin.png)
+
+```
+Main class: com.gresham.td.TermDepositServerKt
+Program arguments: --spring.profiles.active=dev,user
+Working directory: src\backend
+```
 
 Run this configuration.
 
